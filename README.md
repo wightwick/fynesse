@@ -1,2 +1,2 @@
 # algify
-### finesse the algy
+finesse the algy
