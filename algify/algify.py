@@ -1,14 +1,17 @@
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 from rxconfig import config
+
+import reflex as rx
 from data import Track
+from icecream import ic
+from datetime import datetime
+import pandas as pd
 from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
-from pdb import set_trace
-import json
-import reflex as rx
 
-docs_url = "https://reflex.dev/docs/getting-started/introduction"
-filename = f"{config.app_name}/{config.app_name}.py"
+PAGE_WIDTH = "60vw"
+FULL = "100%"
+
 
 scopes = [
     # 'ugc-image-upload',
@@ -31,6 +34,7 @@ scopes = [
     # 'user-read-email',
     # 'user-read-private',
 ]
+
 sp = Spotify(
     auth_manager=SpotifyOAuth(
         scope=scopes,
@@ -41,70 +45,64 @@ sp = Spotify(
     )
 )
 
-# state.py
-import reflex as rx
-from spotipy import SpotifyOAuth
+
+class State(rx.State):
+    """The app state."""
+
+    tracks: dict = {'recent': [],}
+
+    def fetch_rp_tracks(self):
+        raw_rp_tracks = sp.current_user_recently_played(limit=50)['items']
+        self.tracks['recent'] = [Track(item['track']) for item in raw_rp_tracks]
+        # print(raw_rp_tracks)
 
 
-class TracksState(rx.State):
-    rp_tracks: list[Track] = [Track(item['track']) for item in sp.current_user_recently_played(limit=50)['items']]
-
-    def fetch_recently_played_tracks(self):
-        recently_played = sp.current_user_recently_played(limit=50)['items']
-        self.rp_tracks = [Track(item['track']) for item in recently_played]
-        print(self.rp_tracks)
-
-    def serve_tracks_data(self, track_list) -> list[list]:
+    @rx.var
+    def rp_tracks_data(self) -> list[list]:
         return [
-            t.name
-            for t in track_list
+            [t.name, t.uri]
+            for t in self.tracks['recent']
         ]
 
 
+def track_card(name):
+    return rx.box(rx.text(name))
 
-# State.fetch_recently_played_tracks()
-#
-# set_trace()
+def rp_tracks_table():
 
-# set_trace()
+    table = rx.data_table(
+        columns=["Name", "Uri"],
+        data=State.rp_tracks_data,
+        pagination=True,
+        sort=True,
+        # search=True,
+    )
+    return table
 
-# print(state.rp_tracks[0])
-
-# print([t.name for t in State.rp_tracks])
-# set_trace()
-
-TracksState.fetch_recently_played_tracks()
-
-def colored_box(t):
-    return rx.box(rx.text(t.name))
-
+def rp_tracks_cards():
+    stack = rx.vstack(
+        rx.foreach(
+            State.rp_tracks_data,
+            lambda x: rx.box(x[0])
+        ), 
+        
+    )
+    return stack
 
 def index() -> rx.Component:
-    # print(sp.current_user_playing_track())
-
-    # print(rp_tracks[0])
-
-    # print(state)
-
-    # print(state.rp_tracks)
-    # print(state)
-
-    return rx.fragment(
-        rx.color_mode_button(rx.color_mode_icon(), float="right"),
+    return rx.center(
         rx.vstack(
-            rx.text('abc'),
-            rx.vstack(
-                rx.foreach(
-                    TracksState.rp_tracks,
-                    colored_box
-                ),
-            )
-        )
+            # rp_tracks_table(),
+            rp_tracks_cards(),
+            rx.spacer(),
+            # width=PAGE_WIDTH,
+            height="70%",
+        ),
+        height="100vh",
     )
 
-set_trace()
 
 # Add state and page to the app.
 app = rx.App()
-app.add_page(index)
+app.add_page(index, on_load=State.fetch_rp_tracks)
 app.compile()

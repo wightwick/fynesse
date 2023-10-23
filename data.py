@@ -2,16 +2,15 @@ from spotipy import SpotifyOAuth
 from dataclasses import dataclass
 import reflex as rx
 
-@dataclass
 class Track(rx.Base):
     uri: str
     name: str
-    # artist_names: list
-    # artist_uris: list
+    artist_names: list
+    artist_uris: list
     album_name: str
-    # album_art: list
+    album_art: list
     spotify_url: str
-    # artist_genres: list = None
+    artist_genres: list = None
 
     raw_dict: dict = None
 
@@ -27,8 +26,6 @@ class Track(rx.Base):
     def __init__(
             self,
             track_dict,
-            # artist_genres=False,
-            # sp: SpotifyOAuth = None,
             keep_dict=False
         ):
         uri = track_dict['uri']
@@ -38,22 +35,14 @@ class Track(rx.Base):
         album_name = track_dict['album']['name']
         spotify_url = track_dict['external_urls']['spotify']
         
-        # if artist_genres:
-        #     self.get_artist_genres(sp)
-
         album_art = track_dict['album']['images']
 
         super().__init__(
             uri=uri,
             name=name,
-            # artist_names=artist_names,
-            # artist_uris=artist_uris,
+            artist_names=artist_names,
+            artist_uris=artist_uris,
             album_name=album_name,
-            # album_art=album_art,
+            album_art=album_art,
             spotify_url=spotify_url,
-            # artist_genres=artist_genres,
-            # raw_dict=track_dict if keep_dict else None,
         )
-
-
-
