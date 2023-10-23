@@ -2,7 +2,6 @@
 from rxconfig import config
 from data import Track
 from spotipy import Spotify, SpotifyOAuth
-from state import State
 from spotify_secrets import *
 from pdb import set_trace
 import json
@@ -42,20 +41,42 @@ sp = Spotify(
     )
 )
 
-recently_played = sp.current_user_recently_played(limit=50)['items']
-rp_tracks = [json.dumps(Track(item['track']).__dict__) for item in recently_played]
+# state.py
+import reflex as rx
+from spotipy import SpotifyOAuth
 
-state = State() 
-state.rp_tracks = rp_tracks
+
+class TracksState(rx.State):
+    rp_tracks: list[Track] = [Track(item['track']) for item in sp.current_user_recently_played(limit=50)['items']]
+
+    def fetch_recently_played_tracks(self):
+        recently_played = sp.current_user_recently_played(limit=50)['items']
+        self.rp_tracks = [Track(item['track']) for item in recently_played]
+        print(self.rp_tracks)
+
+    def serve_tracks_data(self, track_list) -> list[list]:
+        return [
+            t.name
+            for t in track_list
+        ]
+
+
+
+# State.fetch_recently_played_tracks()
+#
+# set_trace()
+
+# set_trace()
+
 # print(state.rp_tracks[0])
 
 # print([t.name for t in State.rp_tracks])
 # set_trace()
 
+TracksState.fetch_recently_played_tracks()
 
-def colored_box(t: dict):
-    td = json.loads(t)
-    return rx.box(rx.text(t['name']))
+def colored_box(t):
+    return rx.box(rx.text(t.name))
 
 
 def index() -> rx.Component:
@@ -71,35 +92,17 @@ def index() -> rx.Component:
     return rx.fragment(
         rx.color_mode_button(rx.color_mode_icon(), float="right"),
         rx.vstack(
-            rx.heading("Welcome to Reflex!", font_size="2em"),
-            rx.box("Get started by editing ", rx.code(filename, font_size="1em")),
-            rx.box(
-                "some additional shit",
-                border_width='thin'
-                ),
-            rx.link(
-                "Check out our docs!",
-                href=docs_url,
-                border="0.1em solid",
-                padding="0.5em",
-                border_radius="0.5em",
-                _hover={
-                    "color": rx.color_mode_cond(
-                        light="rgb(107,99,246)",
-                        dark="rgb(179, 175, 255)",
-                    )
-                },
-            ),
-
+            rx.text('abc'),
             rx.vstack(
-                    rx.foreach(state.rp_tracks, colored_box),
-            ),
-
-            # colored_box(rp_tracks[0])
-
+                rx.foreach(
+                    TracksState.rp_tracks,
+                    colored_box
+                ),
+            )
         )
     )
 
+set_trace()
 
 # Add state and page to the app.
 app = rx.App()

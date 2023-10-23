@@ -2,16 +2,16 @@ from spotipy import SpotifyOAuth
 from dataclasses import dataclass
 import reflex as rx
 
-@dataclass(init=False)
-class Track():
+@dataclass
+class Track(rx.Base):
     uri: str
     name: str
-    artist_names: list
-    artist_uris: list
+    # artist_names: list
+    # artist_uris: list
     album_name: str
-    album_art: list
+    # album_art: list
     spotify_url: str
-    artist_genres: list = None
+    # artist_genres: list = None
 
     raw_dict: dict = None
 
@@ -24,19 +24,36 @@ class Track():
         self.get_artist_genres(sp)
         return self
     
-    def __init__(self, track_dict, artist_genres=False, sp: SpotifyOAuth = None, keep_dict=False):
-        if keep_dict:
-            self.raw_dict = track_dict
-        self.uri = track_dict['uri']
-        self.name = track_dict['name']
-        self.artist_names = [a['name'] for a in track_dict['artists']]
-        self.artist_uris = [a['uri'] for a in track_dict['artists']]
-        self.album_name = track_dict['album']['name']
-        self.spotify_url = track_dict['external_urls']['spotify']
+    def __init__(
+            self,
+            track_dict,
+            # artist_genres=False,
+            # sp: SpotifyOAuth = None,
+            keep_dict=False
+        ):
+        uri = track_dict['uri']
+        name = track_dict['name']
+        artist_names = [a['name'] for a in track_dict['artists']]
+        artist_uris = [a['uri'] for a in track_dict['artists']]
+        album_name = track_dict['album']['name']
+        spotify_url = track_dict['external_urls']['spotify']
         
-        if artist_genres:
-            self.get_artist_genres(sp)
+        # if artist_genres:
+        #     self.get_artist_genres(sp)
 
-        self.album_art = track_dict['album']['images']
+        album_art = track_dict['album']['images']
+
+        super().__init__(
+            uri=uri,
+            name=name,
+            # artist_names=artist_names,
+            # artist_uris=artist_uris,
+            album_name=album_name,
+            # album_art=album_art,
+            spotify_url=spotify_url,
+            # artist_genres=artist_genres,
+            # raw_dict=track_dict if keep_dict else None,
+        )
+
 
 
