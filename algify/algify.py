@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
+from datetime import datetime
 
 PAGE_WIDTH = "60vw"
 FULL = "100%"
@@ -49,53 +50,89 @@ sp = Spotify(
 class State(rx.State):
     """The app state."""
 
-    tracks: dict = {'recent': [],}
+    tracks: dict[str, list[Track]] = {'recent': [],}
+    rp_tracks_have_genre: bool = False
 
     def fetch_rp_tracks(self):
         raw_rp_tracks = sp.current_user_recently_played(limit=50)['items']
-        self.tracks['recent'] = [Track(item['track']) for item in raw_rp_tracks]
-        # print(raw_rp_tracks)
+        self.tracks['recent'] = [Track(item) for item in raw_rp_tracks]
+        self.rp_tracks_have_genre = False
 
+    def fetch_genres_rp(self):
+        self.tracks['recent'] = [
+            track.with_artist_genres(sp) for track
+            in self.tracks['recent']
+        ]
+        self.rp_tracks_have_genre = True
 
     @rx.var
-    def rp_tracks_data(self) -> list[list]:
-        return [
-            [t.name, t.uri]
-            for t in self.tracks['recent']
-        ]
+    def rp_tracks_data(self) -> list[Track]:
+        return self.tracks['recent']
+        
 
-
-def track_card(name):
-    return rx.box(rx.text(name))
-
-def rp_tracks_table():
-
-    table = rx.data_table(
-        columns=["Name", "Uri"],
-        data=State.rp_tracks_data,
-        pagination=True,
-        sort=True,
-        # search=True,
+def genre_card(genre: str):
+    return rx.box(
+        genre,
+        border_radius='xl',
+        border_width='thin',
+        padding='6px 10px'
     )
-    return table
+    
 
-def rp_tracks_cards():
+def track_card(track: Track):    
+    return rx.box(
+            rx.hstack(
+                rx.image(src_set=track.album_art_srcset, html_width='100'),
+                rx.vstack(
+                    rx.box(track.track_name),
+                    # rx.text(track.added_at),
+                    rx.box(track.artist_names.join(', ')),
+                    rx.box(track.album_name),
+                    
+                    rx.cond(
+                        track.artist_genres.length() > 0, 
+                        rx.wrap(
+                            rx.foreach(
+                                track.artist_genres,
+                                #lambda x: rx.box(x, border_radius='xl', border_width='thin')
+                                lambda x: rx.wrap_item(genre_card(x))
+                            )
+                        ),
+                        rx.text('')
+                    ),
+
+                    align_items='left',
+                )
+        ),
+        border_width='thick',
+        border_radius='lg'
+    )
+
+
+def rp_tracks_list_view():
     stack = rx.vstack(
+        rx.button(
+            rx.text('Get genres'),
+            on_click=State.fetch_genres_rp, size='lg',
+            is_disabled=State.rp_tracks_have_genre
+        ),
         rx.foreach(
             State.rp_tracks_data,
-            lambda x: rx.box(x[0])
-        ), 
-        
+            track_card
+        ),
+        align_items='left',
+        width=500
     )
     return stack
+
+# def selected_tracks_view():
+#     return rx.text('Selected')
 
 def index() -> rx.Component:
     return rx.center(
         rx.vstack(
-            # rp_tracks_table(),
-            rp_tracks_cards(),
+            rp_tracks_list_view(),
             rx.spacer(),
-            # width=PAGE_WIDTH,
             height="70%",
         ),
         height="100vh",
