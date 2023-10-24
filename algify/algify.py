@@ -2,92 +2,60 @@
 from rxconfig import config
 
 import reflex as rx
-from data import Track
+from algify.data import Track
 from icecream import ic
-from datetime import datetime
-import pandas as pd
-from spotipy import Spotify, SpotifyOAuth
-from spotify_secrets import *
-from datetime import datetime
+from .state import State
 
 PAGE_WIDTH = "60vw"
 FULL = "100%"
 
-
-scopes = [
-    # 'ugc-image-upload',
-    'user-read-playback-state',
-    'user-modify-playback-state',
-    'user-read-currently-playing',
-    'app-remote-control',
-    'streaming',
-    'playlist-read-private',
-    'playlist-read-collaborative',
-    'playlist-modify-private',
-    'playlist-modify-public',
-    # 'user-follow-modify',
-    # 'user-follow-read',
-    'user-read-playback-position',
-    'user-top-read',
-    'user-read-recently-played',
-    'user-library-modify',
-    'user-library-read',
-    # 'user-read-email',
-    # 'user-read-private',
-]
-
-sp = Spotify(
-    auth_manager=SpotifyOAuth(
-        scope=scopes,
-        client_id=SPOTIPY_CLIENT_ID,
-        client_secret=SPOTIPY_CLIENT_SECRET,
-        redirect_uri=SPOTIPY_REDIRECT_URI,
-        open_browser=True
-    )
-)
-
-
-class State(rx.State):
-    """The app state."""
-
-    tracks: dict[str, list[Track]] = {'recent': [],}
-    rp_tracks_have_genre: bool = False
-
-    def fetch_rp_tracks(self):
-        raw_rp_tracks = sp.current_user_recently_played(limit=50)['items']
-        self.tracks['recent'] = [Track(item) for item in raw_rp_tracks]
-        self.rp_tracks_have_genre = False
-
-    def fetch_genres_rp(self):
-        self.tracks['recent'] = [
-            track.with_artist_genres(sp) for track
-            in self.tracks['recent']
-        ]
-        self.rp_tracks_have_genre = True
-
-    @rx.var
-    def rp_tracks_data(self) -> list[Track]:
-        return self.tracks['recent']
-        
-
-def genre_card(genre: str):
+def genre_card(genre: str, add_remove_button: bool):
     return rx.box(
-        genre,
-        border_radius='xl',
+        rx.hstack(
+            rx.text('#' + genre, as_='small'),
+            rx.cond(
+                add_remove_button,
+                rx.button(
+                    rx.icon(tag="add", width='10px'),
+                    on_click=State.add_genre(genre),
+                    is_disabled=State.selected_genres.contains(genre),
+                    border="1px solid #ddd",
+                    size='sm'
+                ),
+                rx.button(
+                    rx.icon(tag="minus"),
+                    on_click=State.remove_genre(genre),
+                    border="1px solid #ddd",
+                    size='sm'
+                ),
+            ),
+        ),
+        
+        border_radius='sm',
         border_width='thin',
-        padding='6px 10px'
+        padding='2px 4px'
     )
     
 
-def track_card(track: Track):    
+def track_card(track: Track, add_remove_button: bool, source: str):    
     return rx.box(
             rx.hstack(
                 rx.image(src_set=track.album_art_srcset, html_width='100'),
                 rx.vstack(
-                    rx.box(track.track_name),
+                    rx.box(
+                        rx.text(
+                            track.track_name,
+                            as_='strong'
+                        )
+                    ),
                     # rx.text(track.added_at),
                     rx.box(track.artist_names.join(', ')),
-                    rx.box(track.album_name),
+                    rx.box(
+                        rx.text(
+                            track.album_name,
+                            as_='small'
+                        )
+                    ),
                     
                     rx.cond(
                         track.artist_genres.length() > 0, 
@@ -95,46 +63,99 @@ def track_card(track: Track):
                             rx.foreach(
                                 track.artist_genres,
                                 #lambda x: rx.box(x, border_radius='xl', border_width='thin')
-                                lambda x: rx.wrap_item(genre_card(x))
+                                lambda x: rx.wrap_item(genre_card(x, True))
                             )
                         ),
                         rx.text('')
                     ),
 
                     align_items='left',
+                ),
+                rx.cond(
+                    add_remove_button,
+                    rx.button(
+                        rx.icon(tag="add"),
+                        on_click=State.add_uri(track.uri, source),
+                        is_disabled=State.selected_track_uris.contains(track.uri),
+                        border="1px solid #ddd",
+                    ),
+                    rx.button(
+                        rx.icon(tag="minus"),
+                        on_click=State.remove_uri(track.uri),
+                        # is_disabled=State.selected_track_uris.contains(track.uri),
+                        border="1px solid #ddd",
+                    ),
                 )
         ),
-        border_width='thick',
+        border_width='medium',
         border_radius='lg'
     )
 
+def selections_view():
+    return rx.box(
+        rx.vstack(
+            rx.heading('Selections'),
+            rx.hstack(
+                rx.wrap(
+                    rx.foreach(
+                        State.selected_tracks,
+                        lambda x: rx.wrap_item(track_card(x, False, '')
+                        )
+                    )
+                ),
+                rx.wrap(
+                    rx.foreach(
+                        State.selected_genres,
+                        lambda x: rx.wrap_item(genre_card(x, False)
+                        )
+                    )
+                )
+            )
+        ),
+        
+        border_width='thick',
+        border_radius='xl',
+        padding='10px'
+    )
 
 def rp_tracks_list_view():
     stack = rx.vstack(
-        rx.button(
-            rx.text('Get genres'),
-            on_click=State.fetch_genres_rp, size='lg',
-            is_disabled=State.rp_tracks_have_genre
+        rx.hstack(
+            rx.heading('Recently played'),
+            rx.spacer(),
+            rx.button(
+                rx.text('Get genres'),
+                on_click=State.fetch_genres_rp, size='md',
+                is_disabled=State.rp_tracks_have_genre,
+            )
         ),
         rx.foreach(
-            State.rp_tracks_data,
-            track_card
+            State.rp_tracks,
+            lambda x: track_card(x, True, 'recent')
         ),
         align_items='left',
         width=500
     )
-    return stack
+    
+    return rx.box(
+        stack,
+        border_width='thick',
+        border_radius='xl',
+        padding='10px'
+    )
 
 # def selected_tracks_view():
 #     return rx.text('Selected')
 
 def index() -> rx.Component:
     return rx.center(
-        rx.vstack(
-            rp_tracks_list_view(),
-            rx.spacer(),
-            height="70%",
-        ),
+            rx.vstack(
+                selections_view(),
+                genre_card('test', True),
+                rp_tracks_list_view(),
+                rx.spacer(),
+                height="70%",
+            ),
         height="100vh",
     )
 

@@ -25,6 +25,10 @@ class Track(rx.Base):
         self.get_artist_genres(sp)
         return self
     
+    def without_artist_genres(self):
+        self.artist_genres = []
+        return self
+    
     def __init__(
             self,
             item_dict,
