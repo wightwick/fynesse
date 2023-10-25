@@ -1,4 +1,3 @@
-# state.py
 import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
