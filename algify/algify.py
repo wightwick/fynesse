@@ -6,38 +6,27 @@ from icecream import ic
 from .state import State
 from .constants import *
 
-PAGE_WIDTH = "60vw"
-FULL = "100%"
+PAGE_WIDTH = "100vw"
 
-def genre_card(genre: str, add_remove_button: bool):
+def genre_card(genre: str):
     return rx.box(
         rx.hstack(
             rx.text('#' + genre, as_='small'),
-            rx.cond(
-                add_remove_button,
                 rx.button(
-                    rx.icon(tag="add"),
-                    on_click=State.add_genre_to_seeds(genre),
-                    is_disabled=State.seed_genres.contains(genre),
-                    size='xs',
-                    variant='ghost'
-                ),
-                rx.button(
-                    rx.icon(tag="minus"),
-                    on_click=State.remove_genre_from_seeds(genre),
+                    rx.icon(tag="search"),
+                    on_click=State.stage_genre_for_search(genre),
+                    
                     size='xs',
                     variant='ghost'
                 ),
             ),
-        ),
-        
         border_radius='lg',
         border_width='thin',
         padding_left='6px'
     )
 
 def artist_card(artist_uri_name: tuple[str, str], add_remove_button: bool):
-    return rx.box(
+    return rx.box( 
         rx.hstack(
             rx.text(artist_uri_name.__getitem__(1)),
             rx.cond(
@@ -109,7 +98,7 @@ def track_card(
                             rx.foreach(
                                 track.artist_genres,
                                 #lambda x: rx.box(x, border_radius='xl', border_width='thin')
-                                lambda x: rx.wrap_item(genre_card(x, True))
+                                lambda x: rx.wrap_item(genre_card(x))
                             ),
                             padding_bottom='1.5'
                         ),
@@ -139,7 +128,7 @@ def track_card(
         width='100%',
     )
 
-def seeds_view():
+def seeds_view() -> rx.Component:
     return rx.box(
         rx.vstack(
             rx.heading('Seeds', size='md'),
@@ -160,16 +149,16 @@ def seeds_view():
                         ),
                     ),
                 ),
-                rx.box(
-                    rx.vstack(
-                        rx.foreach(
-                            State.seed_genres,
-                            lambda x: rx.wrap_item(
-                                genre_card(x, False)
-                            ),
-                        ),
-                    ),
-                ),
+                # rx.box(
+                #     rx.vstack(
+                #         rx.foreach(
+                #             State.seed_genres,
+                #             lambda x: rx.wrap_item(
+                #                 genre_card(x, False)
+                #             ),
+                #         ),
+                #     ),
+                # ),
                 rx.box(
                     rx.vstack(
                         rx.foreach(
@@ -183,46 +172,87 @@ def seeds_view():
             ),
         ),
         
-        border_width='thick',
+        border_width='medium',
         border_radius='xl',
-        padding='10px'
+        padding='10px',
+        width=400
     )
 
-def rp_tracks_list_view():
-    stack = rx.vstack(
-        rx.hstack(
-            # rx.heading('Recently played', size='md'),
-            rx.radio_group(
-                rx.vstack(
-                    rx.foreach(
-                        RP_LIKED_OPTIONS,
-                        lambda option: rx.radio(option, as_='strong'),
-                    ),
-                    align_items='left',
+def recommendations_view():
+    return rx.box(
+        seeds_view(),
+        padding='3'
+    )
+
+def search_view():
+    return rx.box(
+            rx.vstack(
+                rx.input(
+                    placeholder='Genre',
+                    value=State.search_genre,
+                    on_change=State.set_search_genre,    
                 ),
-                default_value=RP_LIKED_OPTIONS[0],
-                on_change=State.set_rp_liked_selection
             ),
-            rx.spacer(),
-            
-            rx.cond(
-                State.rp_liked_selection == RP_LIKED_OPTIONS[0],
-                rx.button(
-                    rx.text('Get genres'),
-                    on_click=State.fetch_genres_rp,
-                    size='md',
-                    is_disabled=State.rp_tracks_have_genre,
-                ),
-                rx.button(
-                    rx.text('Get genres'),
-                    on_click=State.fetch_genres_liked,
-                    size='md',
-                    is_disabled=State.liked_tracks_have_genre,
-                )
-            ),
+            width=200
+        )
+
+
+def library_view() -> rx.Component:
+    tabs = rx.tabs(
+        rx.tab_list(
+            rx.tab('Recently Played'),
+            rx.tab('Liked Songs'),
+            rx.tab('Playlist'),
         ),
-        rx.cond(
-            State.rp_liked_selection == RP_LIKED_OPTIONS[0],
+        rx.tab_panels(
+            rx.tab_panel(recent_tracks_panel()),
+            rx.tab_panel(liked_songs_view_panel()),
+            rx.tab_panel(playlist_browser_panel()),
+        ),
+    )
+  
+    return rx.box(
+        tabs,
+        width=500
+    )
+# rx.vstack(
+#         rx.heading(
+#             'Library',
+#             margin_left='2',
+#             margin_bottom='-4'
+#         ),
+#         rx.box(
+#             tabs,
+#             border_width='thick',
+#             border_radius='xl',
+#         ),
+#         align_items='left'
+#     )
+
+def view_pane(content: rx.component, heading_text: str) -> rx.Component:
+    return rx.vstack(
+        rx.heading(
+            heading_text,
+            margin_left='2',
+            margin_bottom='-4'
+        ),
+        rx.box(
+            content,
+            border_width='thick',
+            border_radius='2xl',
+        ),
+        align_items='left'
+    )
+
+def recent_tracks_panel() -> rx.Component:
+    return rx.vstack(
+        rx.button(
+            rx.text('Get genres'),
+            on_click=State.fetch_genres_rp,
+            size='md',
+            is_disabled=State.rp_tracks_have_genre,
+        ),
+        rx.vstack(
             rx.foreach(
                 State.rp_tracks,
                 lambda x: track_card(
@@ -233,36 +263,12 @@ def rp_tracks_list_view():
                                 add_remove_button=True
                             )
             ),
-            rx.vstack(
-                rx.foreach(
-                    State.liked_tracks,
-                    lambda x: track_card(
-                                    track=x,
-                                    show_genres=True,
-                                    source='recent',
-                                    artists_interactive=True,
-                                    add_remove_button=True
-                                )
-                ),
-                rx.button('Load more', on_click=State.fetch_liked_tracks_batch)
-            ),
-        ),
-        
-        align_items='left',
-        width=500,
-    )
-    
-    return rx.box(
-        stack,
-        border_width='thick',
-        border_radius='xl',
-        padding='10px'
+        )
     )
 
-def playlist_view():
-    stack = rx.vstack(
+def playlist_browser_panel() -> rx.Component:
+    return rx.vstack(
         rx.hstack(
-            rx.heading('Playlist', size='md'),
             rx.spacer(),
             rx.select(
                 State.playlist_names,
@@ -286,32 +292,43 @@ def playlist_view():
                         )
         ),
         align_items='left',
-        width=500,
-    )
-    
-    return rx.box(
-        stack,
-        border_width='thick',
-        border_radius='xl',
-        padding='10px'
     )
 
-
-# def selected_tracks_view():
-#     return rx.text('Selected')
+def liked_songs_view_panel() -> rx.Component:
+    return rx.vstack(
+        rx.button(
+            rx.text('Get genres'),
+            on_click=State.fetch_genres_liked,
+            size='md',
+            is_disabled=State.liked_tracks_have_genre,
+        ),
+        rx.vstack(
+            rx.foreach(
+                State.liked_tracks,
+                lambda x: track_card(
+                                track=x,
+                                show_genres=True,
+                                source='recent',
+                                artists_interactive=True,
+                                add_remove_button=True
+                            )
+            ),
+            rx.button('Load more', on_click=State.fetch_liked_tracks_batch)
+        ),
+    )
 
 def index() -> rx.Component:
     return rx.container(
             rx.vstack(
-                seeds_view(),
-                rx.hstack(
-                    rp_tracks_list_view(),
-                    playlist_view(),
-                    align_items='top'
+                rx.flex(
+                    view_pane(library_view(), 'Library'),
+                    view_pane(recommendations_view(), 'Recommendations'),
+                    view_pane(search_view(), 'Search'),
+                    align_items='top',
                 ),
                 rx.spacer(),
-                height="70%",
             ),
+            
     )
 
 

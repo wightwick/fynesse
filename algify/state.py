@@ -43,6 +43,7 @@ class State(rx.State):
 
     seed_track_uris_with_source: list[tuple[str, str]]
     seed_genres: list[str]
+    search_genre: str = ''
     seed_artists: list[tuple[str, str]]
     selected_playlist: Playlist = Playlist()
     rp_liked_selection: str = RP_LIKED_OPTIONS[0]
@@ -185,6 +186,13 @@ class State(rx.State):
 
         if pl_name not in self.tracks:
             self.fetch_tracks_for_playlist(self.selected_playlist)
+
+    ### SEARCH STAGING
+    def stage_genre_for_search(self, genre):
+        self.search_genre = genre
+    
+    def clear_search_genre(self):
+        self.search_genre = ''
 
     #### SEEDING
     def add_track_uri_to_seeds(self, uri: str, source: str):
