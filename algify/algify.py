@@ -32,7 +32,7 @@ def artist_card(artist_uri_name: tuple[str, str], add_remove_button: bool):
             rx.cond(
                 add_remove_button,
                 rx.button(
-                    rx.icon(tag="add"),
+                    '🌱',
                     on_click=State.add_artist_to_seeds(artist_uri_name),
                     is_disabled=State.seed_artist_uris.contains(artist_uri_name.__getitem__(0)),
                     size='xs',
@@ -111,7 +111,7 @@ def track_card(
                 rx.cond(
                     add_remove_button,
                     rx.button(
-                        rx.icon(tag="add"),
+                        '🌱',
                         on_click=State.add_track_uri_to_seeds(track.uri, source),
                         is_disabled=State.seed_track_uris.contains(track.uri),
                     ),
@@ -131,9 +131,15 @@ def track_card(
 def seeds_view() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.heading('Seeds', size='md'),
-            rx.hstack(
-                rx.box(
+            rx.heading(
+                'Seeds', 
+                size='md',
+                margin_bottom=-3,
+                margin_left=2
+            ),
+            rx.box(
+                rx.vstack(
+                
                     rx.vstack(
                         rx.foreach(
                             State.seed_tracks,
@@ -148,18 +154,7 @@ def seeds_view() -> rx.Component:
                             ),
                         ),
                     ),
-                ),
-                # rx.box(
-                #     rx.vstack(
-                #         rx.foreach(
-                #             State.seed_genres,
-                #             lambda x: rx.wrap_item(
-                #                 genre_card(x, False)
-                #             ),
-                #         ),
-                #     ),
-                # ),
-                rx.box(
+                
                     rx.vstack(
                         rx.foreach(
                             State.seed_artists,
@@ -168,19 +163,29 @@ def seeds_view() -> rx.Component:
                             ),
                         ),
                     ),
+                    align_items='center'
                 ),
+                
+                border_width='medium',
+                border_radius='xl',
+                padding='10px',
+                width=400
+
             ),
+            align_items='left'
         ),
         
-        border_width='medium',
-        border_radius='xl',
-        padding='10px',
-        width=400
     )
 
 def recommendations_view():
     return rx.box(
-        seeds_view(),
+        rx.vstack(
+            seeds_view(),
+            rx.button(
+                'Generate',
+                is_full_width=True
+            ),
+        ),
         padding='3'
     )
 
@@ -193,7 +198,7 @@ def search_view():
                     on_change=State.set_search_genre,    
                 ),
             ),
-            width=200
+            width=400
         )
 
 
@@ -213,7 +218,7 @@ def library_view() -> rx.Component:
   
     return rx.box(
         tabs,
-        width=500
+        width=400
     )
 # rx.vstack(
 #         rx.heading(
