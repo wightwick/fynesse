@@ -4,7 +4,6 @@ import reflex as rx
 from algify.data import Track
 from icecream import ic
 from .state import State
-from .constants import *
 
 PAGE_WIDTH = "100vw"
 

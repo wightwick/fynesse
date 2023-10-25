@@ -3,7 +3,6 @@ from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
 from .data import Track, Playlist
 from .utilities import *
-from .constants import *
 from icecream import ic
 
 scopes = [
@@ -46,7 +45,6 @@ class State(rx.State):
     search_genre: str = ''
     seed_artists: list[tuple[str, str]]
     selected_playlist: Playlist = Playlist()
-    rp_liked_selection: str = RP_LIKED_OPTIONS[0]
     _genre_lookup: dict[str, str] = dict()
     
     
@@ -55,11 +53,6 @@ class State(rx.State):
         raw_rp_tracks = self._sp.current_user_recently_played(limit=50)['items']
         self.tracks['____recent'] = [Track(item) for item in raw_rp_tracks]
         self.rp_tracks_have_genre = False
-
-    # def fetch_initial_liked_tracks(self):
-    #     raw_liked_tracks = self._sp.current_user_saved_tracks(limit=50)['items']
-    #     self.tracks['____liked'] = [Track(item) for item in raw_liked_tracks]
-    #     self.liked_tracks_have_genre = False
 
     def fetch_liked_tracks_batch(self):
         raw_liked_tracks = self._sp.current_user_saved_tracks(
@@ -76,7 +69,6 @@ class State(rx.State):
     ):
         artists = []
         chunk_size = 50
-
         a_uris_subset = list(set(a_uris).difference(set(existing_genre_lookup.keys())))
 
         for i in range(0, len(a_uris_subset), chunk_size):
@@ -84,13 +76,12 @@ class State(rx.State):
             chunk = a_uris_subset[i:i + chunk_size] 
             output_chunk = self._sp.artists(chunk)
             artists.extend(output_chunk['artists'])
-
+            
         genre_lookup_lists = [
             {a['uri']:a['genres']} for a in
             artists
         ]
         genre_lookup = {k: v for d in genre_lookup_lists for k, v in d.items()}
-
         genre_lookup.update(existing_genre_lookup)
 
         return genre_lookup
