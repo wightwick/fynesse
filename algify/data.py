@@ -1,11 +1,12 @@
 from spotipy import SpotifyOAuth
 import reflex as rx
+from .utilities import src_set_from_images_list
 
 class Track(rx.Base):
     uri: str
     track_name: str
-    artist_names: list
-    artist_uris: list
+    artist_uris_names: list[tuple[str, str]]
+    artist_names: list[str]
     album_name: str
     album_art: list[str]
     spotify_url: str
@@ -14,32 +15,26 @@ class Track(rx.Base):
     added_at: str
 
     raw_dict: dict = None
-
-    # def get_artist_genres(self, sp: SpotifyOAuth):
-    #     # artist_genre_lists = [sp.artist(uri)['genres'] for uri in self.artist_uris]
-    #     # self.artist_genres = [item for sublist in artist_genre_lists for item in sublist]
-    #     # return self.artist_genres
-        
-    #     self.artist_genres = flat_genre_list_for_artist_uris(self.artist_uris)
         
     def with_artist_genres(self, artist_genres):
         self.artist_genres = artist_genres
         return self
     
-    def without_artist_genres(self):
-        self.artist_genres = []
-        return self
+    @rx.var
+    def artist_uris(self) -> list[str]:
+        return [uri for uri, name in self.artist_uris_names]
     
     def __init__(
             self,
             item_dict,
-            keep_dict=False
         ):
         track_dict = item_dict['track']
         uri = track_dict['uri']
         track_name = track_dict['name']
-        artist_names = [a['name'] for a in track_dict['artists']]
-        artist_uris = [a['uri'] for a in track_dict['artists']]
+
+        artist_uris_names = [(a['uri'], a['name']) for a in track_dict['artists']]
+        artist_names = [name for uri, name in artist_uris_names]
+
         album_name = track_dict['album']['name']
         spotify_url = track_dict['external_urls']['spotify']
         
@@ -47,20 +42,17 @@ class Track(rx.Base):
 
         album_art = [img['url'] for img in raw_album_art]
 
-        album_art_srcset = ', '.join([
-            f"{img['url']} {img['width']}w"
-            for img in raw_album_art
-        ])
+        album_art_srcset = src_set_from_images_list(raw_album_art)
         
         added_at_str = item_dict['added_at'] if 'added_at' in item_dict else item_dict['played_at']
         if added_at_str:
-            added_at = added_at_str #datetime.fromisoformat(added_at_str)
+            added_at = added_at_str
         
         super().__init__(
             uri=uri,
             track_name=track_name,
+            artist_uris_names=artist_uris_names,
             artist_names=artist_names,
-            artist_uris=artist_uris,
             album_name=album_name,
             album_art=album_art,
             album_art_srcset=album_art_srcset,
@@ -68,5 +60,35 @@ class Track(rx.Base):
             added_at=added_at
         )
 
+class Playlist(rx.Base):
+    playlist_name: str
+    uri: str
+    description: str
+    public: bool
+    has_genres: bool = False
 
+    def with_genre_flag_true(self):
+        self.has_genres = True
+        return self
 
+    def __init__(
+            self, 
+            pl_dict: dict = {
+                'name': '',
+                'uri': '',
+                'description': '',
+                'public': True
+            }
+        ):
+        playlist_name = pl_dict['name']
+        uri = pl_dict['uri']
+        description = pl_dict['description']
+        public = bool(pl_dict['public'])
+
+        super().__init__(
+            playlist_name=playlist_name,
+            uri=uri,
+            description=description,
+            public=public
+        )
+    
