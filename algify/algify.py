@@ -17,14 +17,14 @@ def genre_card(genre: str, add_remove_button: bool):
                 add_remove_button,
                 rx.button(
                     rx.icon(tag="add", width='10px'),
-                    on_click=State.add_genre(genre),
+                    on_click=State.add_genre_to_seeds(genre),
                     is_disabled=State.selected_genres.contains(genre),
                     border="1px solid #ddd",
                     size='sm'
                 ),
                 rx.button(
                     rx.icon(tag="minus"),
-                    on_click=State.remove_genre(genre),
+                    on_click=State.remove_genre_from_seeds(genre),
                     border="1px solid #ddd",
                     size='sm'
                 ),

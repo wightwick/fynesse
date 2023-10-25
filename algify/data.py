@@ -1,5 +1,4 @@
 from spotipy import SpotifyOAuth
-from datetime import datetime
 import reflex as rx
 
 class Track(rx.Base):
@@ -16,13 +15,15 @@ class Track(rx.Base):
 
     raw_dict: dict = None
 
-    def get_artist_genres(self, sp: SpotifyOAuth):
-        artist_genre_lists = [sp.artist(uri)['genres'] for uri in self.artist_uris]
-        self.artist_genres = [item for sublist in artist_genre_lists for item in sublist]
-        return self.artist_genres
-
-    def with_artist_genres(self, sp):
-        self.get_artist_genres(sp)
+    # def get_artist_genres(self, sp: SpotifyOAuth):
+    #     # artist_genre_lists = [sp.artist(uri)['genres'] for uri in self.artist_uris]
+    #     # self.artist_genres = [item for sublist in artist_genre_lists for item in sublist]
+    #     # return self.artist_genres
+        
+    #     self.artist_genres = flat_genre_list_for_artist_uris(self.artist_uris)
+        
+    def with_artist_genres(self, artist_genres):
+        self.artist_genres = artist_genres
         return self
     
     def without_artist_genres(self):

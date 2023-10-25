@@ -3,6 +3,7 @@ import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
 from .data import Track
+from .utilities import *
 
 scopes = [
     # 'ugc-image-upload',
@@ -56,11 +57,11 @@ class State(rx.State):
             if u != uri
         ]
 
-    def add_genre(self, genre: str):
+    def add_genre_to_seeds(self, genre: str):
         if genre not in self.selected_genres:
             self.selected_genres = [*self.selected_genres, genre]
 
-    def remove_genre(self, genre: str):
+    def remove_genre_from_seeds(self, genre: str):
         self.selected_genres = [
             g for g in self.selected_genres
             if g != genre
@@ -72,11 +73,21 @@ class State(rx.State):
         self.rp_tracks_have_genre = False
 
     def fetch_genres_rp(self):
+        artist_uris = [
+            item for sublist in 
+            [
+                t.artist_uris
+                for t in self.tracks['recent']
+            ]
+            for item in sublist
+        ]
+        genre_lookup = create_genre_dict_from_artist_uris(artist_uris, self._sp)
+
         self.tracks['recent'] = [
-            track.with_artist_genres(self._sp) for track
+            track.with_artist_genres(flat_genre_list_for_artist_uris(track.artist_uris, genre_lookup))
+            for track
             in self.tracks['recent']
         ]
-        self.rp_tracks_have_genre = True
 
     @rx.var
     def selected_tracks(self) -> list[Track]:
