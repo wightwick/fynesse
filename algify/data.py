@@ -26,9 +26,20 @@ class Track(rx.Base):
     
     def __init__(
             self,
-            item_dict,
+            input_dict: dict,
+            track_enclosed_in_item: bool = True
         ):
-        track_dict = item_dict['track']
+        if track_enclosed_in_item:
+            item_dict = input_dict
+            track_dict = item_dict['track']
+            added_at = item_dict['added_at']\
+                if 'added_at' in item_dict\
+                else item_dict['played_at']
+        else:
+            track_dict = input_dict
+            added_at = ''
+
+
         uri = track_dict['uri']
         track_name = track_dict['name']
 
@@ -54,11 +65,7 @@ class Track(rx.Base):
 
         album_art_srcset = src_set_from_images_list(raw_album_art)
         
-        added_at_str = item_dict['added_at']\
-            if 'added_at' in item_dict\
-            else item_dict['played_at']
-        if added_at_str:
-            added_at = added_at_str
+        
         
         super().__init__(
             uri=uri,

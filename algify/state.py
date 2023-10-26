@@ -35,7 +35,8 @@ class State(rx.State):
         )
     )
 
-    tracks: dict[str, list[Track]] = {'____recent': [], '____liked': [], '': []}
+    lib_tracks: dict[str, list[Track]] = {'____recent': [], '____liked': [], '': []}
+    recc_tracks: list[Track] = []
     playlists: list[Playlist]
     rp_tracks_have_genre: bool = False
     liked_tracks_have_genre: bool = False
@@ -51,7 +52,7 @@ class State(rx.State):
     #### FETCHING FROM API
     def fetch_rp_tracks(self):
         raw_rp_tracks = self._sp.current_user_recently_played(limit=50)['items']
-        self.tracks['____recent'] = [
+        self.lib_tracks['____recent'] = [
             Track(item)
             for item
             in raw_rp_tracks
@@ -61,10 +62,10 @@ class State(rx.State):
     def fetch_liked_tracks_batch(self):
         raw_liked_tracks = self._sp.current_user_saved_tracks(
             limit=50,
-            offset=len(self.tracks['____liked'])
+            offset=len(self.lib_tracks['____liked'])
         )['items']
-        self.tracks['____liked'] = [
-            *self.tracks['____liked'],
+        self.lib_tracks['____liked'] = [
+            *self.lib_tracks['____liked'],
             *[Track(item) for item in raw_liked_tracks]
         ]
         self.liked_tracks_have_genre = False
@@ -93,11 +94,15 @@ class State(rx.State):
 
         return genre_lookup
 
-    def _fetch_genres_track_list(self, list_name):
+
+    def _fetch_genres_for_track_list(
+            self,
+            track_list: list[Track]
+        ) -> list[Track]:
         artist_uris = flatten_list_of_lists(
             [
                 t.artist_uris
-                for t in self.tracks[list_name]
+                for t in track_list
             ]
         )
         self._genre_lookup = self._update_genre_dict_from_artist_uris(
@@ -105,7 +110,7 @@ class State(rx.State):
             self._genre_lookup,
         )
 
-        self.tracks[list_name] = [
+        return [
             track.with_artist_genres(
                 flat_genre_list_for_artist_uris(
                     track.artist_uris,
@@ -113,25 +118,65 @@ class State(rx.State):
                 )
             )
             for track
-            in self.tracks[list_name]
+            in track_list
         ]
-    
+
+
+    def _add_genres_to_lib_track_list(self, list_name: str):
+        # artist_uris = flatten_list_of_lists(
+        #     [
+        #         t.artist_uris
+        #         for t in self.lib_tracks[list_name]
+        #     ]
+        # )
+        # self._genre_lookup = self._update_genre_dict_from_artist_uris(
+        #     artist_uris,
+        #     self._genre_lookup,
+        # )
+
+        self.lib_tracks[list_name] = self._fetch_genres_for_track_list(
+            self.lib_tracks[list_name]
+        )
+
     def fetch_genres_rp(self):
-        self._fetch_genres_track_list('____recent')
+        self._add_genres_to_lib_track_list('____recent')
         self.rp_tracks_have_genre = True
 
     def fetch_genres_liked(self):
-        self._fetch_genres_track_list('____liked')
+        self._add_genres_to_lib_track_list('____liked')
         self.liked_tracks_have_genre = True
 
     def fetch_genres_selected_pl(self):
-        self._fetch_genres_track_list(self.selected_playlist.playlist_name)
+        self._add_genres_to_lib_track_list(self.selected_playlist.playlist_name)
         self.selected_playlist = self.selected_playlist.with_genre_flag_true()
         self.playlists = [
             pl if pl.playlist_name != self.selected_playlist.playlist_name else pl.with_genre_flag_true()
             for pl
             in self.playlists
         ]
+
+    ### RECOMMENDATIONS FROM API
+    def fetch_recommendations_from_seeds(
+            self,
+            limit = 20
+        ):
+        print(f'Fetching {limit} recommended tracks')
+        ic(self.seed_artist_uris, self.seed_track_uris)
+        raw_recc_tracks = self._sp.recommendations(
+            seed_artists=self.seed_artist_uris,
+            seed_tracks=self.seed_track_uris,
+            limit=limit
+        )
+        recc_tracks_without_genre = [
+            Track(track, track_enclosed_in_item=False)
+            for track
+            in raw_recc_tracks['tracks']
+        ]
+
+        self.recc_tracks = self._fetch_genres_for_track_list(
+            recc_tracks_without_genre
+        )
+        
 
 
     def fetch_playlists(self):
@@ -164,7 +209,7 @@ class State(rx.State):
             pl_results = self._sp.next(pl_results)
             playlist_tracks.extend(pl_results['items'])
         
-        self.tracks[playlist.playlist_name] = [
+        self.lib_tracks[playlist.playlist_name] = [
             Track(item)
             for item in playlist_tracks
             if item['track']
@@ -188,7 +233,7 @@ class State(rx.State):
             if pl.playlist_name == pl_name
         ][0]
 
-        if pl_name not in self.tracks:
+        if pl_name not in self.lib_tracks:
             self.fetch_tracks_for_playlist(self.selected_playlist)
 
     ### SEARCH STAGING
@@ -236,7 +281,7 @@ class State(rx.State):
     def seed_tracks(self) -> list[Track]:
         all_tracks_flattened = [
             item for sublist
-            in self.tracks.values() 
+            in self.lib_tracks.values() 
             for item in sublist
         ]
         return [
@@ -254,21 +299,25 @@ class State(rx.State):
 
     @rx.var
     def rp_tracks(self) -> list[Track]:
-        return self.tracks['____recent']
+        return self.lib_tracks['____recent']
     
     @rx.var
     def liked_tracks(self) -> list[Track]:
-        return self.tracks['____liked']
+        return self.lib_tracks['____liked']
 
     @rx.var
     def selected_playlist_tracks(self) -> list[Track]:
-        return self.tracks[self.selected_playlist.playlist_name]
+        return self.lib_tracks[self.selected_playlist.playlist_name]
 
     @rx.var
     def playlist_names(self) -> list[str]:
         return [p.playlist_name for p in self.playlists]
     
-    # TODO: PUT ACTUAL LOGIC HERE ONCE RECS GEN!!
+    @rx.var
+    def too_many_seeds(self) -> bool:
+        return len(self.seed_artists) + len(self.seed_tracks) > 5
+
     @rx.var
     def recommendations_generated(self) -> bool:
-        return False
+        return len(self.recc_tracks) > 0
+             
