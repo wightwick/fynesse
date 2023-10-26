@@ -1,0 +1,3 @@
+- do not fetch playlist tracks from api again if we already have it in state
+- fix track card being stretched beynd bounds of parent view when track name is too long
+- can a user track exist in liked songs or recently played in the same way..?? if so need to sanitise loaded tracks from those sources (playlist done)
