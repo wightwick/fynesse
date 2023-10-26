@@ -219,15 +219,83 @@ def seeds_view() -> rx.Component:
         )
     )
 
+def param_slider(
+        param_name: str,
+        # initial_value: rx.var,
+        state_value_setter: callable,
+        state_enabled_var: callable,
+        state_enable_disable_fn: callable
+    ):
+
+    return rx.box(
+        rx.vstack(
+            rx.hstack(
+                rx.text(param_name, as_='b'),
+                rx.switch(
+                    is_checked=state_enabled_var,
+                    on_change=state_enable_disable_fn
+                )
+
+            ),
+            rx.slider(
+                    # value=initial_value,
+                    default_value=0,
+                    is_disabled=~state_enabled_var,
+                    on_change=state_value_setter,
+                    min_=0,
+                    max_=100
+                    
+            ),
+            align_items='left'
+        ),
+        width='100%'
+    )
             
 
 def recommendations_view():
     return rx.box(
         rx.vstack(
             seeds_view(),
+            sub_pane_view(
+                content=rx.vstack(
+                    param_slider(
+                        'Target acousticness',
+                        state_value_setter=State.set_recc_target_acousticness_value,
+                        state_enabled_var=State.recc_target_acousticness_enabled,
+                        state_enable_disable_fn=State.enable_disable_recc_target_acousticness
+                    ),
+                    param_slider(
+                        'Target energy',
+                        state_value_setter=State.set_recc_target_energy_value,
+                        state_enabled_var=State.recc_target_energy_enabled,
+                        state_enable_disable_fn=State.enable_disable_recc_target_energy
+                    ),
+                    param_slider(
+                        'Target liveness',
+                        state_value_setter=State.set_recc_target_liveness_value,
+                        state_enabled_var=State.recc_target_liveness_enabled,
+                        state_enable_disable_fn=State.enable_disable_recc_target_liveness
+                    ),
+                    param_slider(
+                        'Target danceability',
+                        state_value_setter=State.set_recc_target_danceability_value,
+                        state_enabled_var=State.recc_target_danceability_enabled,
+                        state_enable_disable_fn=State.enable_disable_recc_target_danceability
+                    ),
+                    param_slider(
+                        'Target instrumentalness',
+                        state_value_setter=State.set_recc_target_instrumentalness_value,
+                        state_enabled_var=State.recc_target_instrumentalness_enabled,
+                        state_enable_disable_fn=State.enable_disable_recc_target_instrumentalness
+                    )
+
+                ),
+
+                heading='Parameters'
+            ),
             rx.button(
                 'Generate',
-                on_click=State.fetch_recommendations_from_seeds(),
+                on_click=State.fetch_recommendations(),
                 is_disabled=State.too_many_seeds,
                 width='100%',
                 border_radius='xl'

@@ -47,7 +47,46 @@ class State(rx.State):
     seed_artists: list[tuple[str, str]]
     selected_playlist: Playlist = Playlist()
     _genre_lookup: dict[str, str] = dict()
-    
+
+    ### RECOMMENDATION PARAMETERS
+    recc_target_acousticness_value: float = 0
+    recc_target_acousticness_enabled: bool = False
+    def enable_disable_recc_target_acousticness(self, enabled: bool):
+        self.recc_target_acousticness_enabled = enabled
+    def set_recc_target_acousticness_value(self, value: int):
+        self.recc_target_acousticness_value = value / 100
+
+    recc_target_energy_value: float = 0
+    recc_target_energy_enabled: bool = False
+    def enable_disable_recc_target_energy(self, enabled: bool):
+        self.recc_target_energy_enabled = enabled
+    def set_recc_target_energy_value(self, value: int):
+        self.recc_target_energy_value = value / 100
+
+    recc_target_liveness_value: float = 0
+    recc_target_liveness_enabled: bool = False
+    def enable_disable_recc_target_liveness(self, enabled: bool):
+        self.recc_target_liveness_enabled = enabled
+    def set_recc_target_liveness_value(self, value: int):
+        self.recc_target_liveness_value = value / 100
+
+    recc_target_danceability_value: float = 0
+    recc_target_danceability_enabled: bool = False
+    def enable_disable_recc_target_danceability(self, enabled: bool):
+        self.recc_target_danceability_enabled = enabled
+    def set_recc_target_danceability_value(self, value: int):
+        self.recc_target_danceability_value = value / 100
+
+    recc_target_instrumentalness_value: float = 0
+    recc_target_instrumentalness_enabled: bool = False
+    def enable_disable_recc_target_instrumentalness(self, enabled: bool):
+        self.recc_target_instrumentalness_enabled = enabled
+    def set_recc_target_instrumentalness_value(self, value: int):
+        self.recc_target_instrumentalness_value = value / 100
+
+
+
+
     
     #### FETCHING FROM API
     def fetch_rp_tracks(self):
@@ -156,16 +195,34 @@ class State(rx.State):
         ]
 
     ### RECOMMENDATIONS FROM API
-    def fetch_recommendations_from_seeds(
+    def fetch_recommendations(
             self,
             limit = 20
         ):
         print(f'Fetching {limit} recommended tracks')
-        ic(self.seed_artist_uris, self.seed_track_uris)
+        
+        generation_params_dict = {
+            'seed_artists': self.seed_artist_uris,
+            'seed_tracks': self.seed_track_uris,
+            'limit': 20,
+            'target_acousticness': self.recc_target_acousticness_value \
+                if self.recc_target_acousticness_enabled else None,
+            'target_energy': self.recc_target_energy_value \
+                if self.recc_target_energy_enabled else None,
+            'target_liveness': self.recc_target_liveness_value \
+                if self.recc_target_liveness_enabled else None,
+            'target_danceability': self.recc_target_danceability_value \
+                if self.recc_target_danceability_enabled else None,
+            'target_instrumentalness': self.recc_target_instrumentalness_value \
+                if self.recc_target_instrumentalness_enabled else None,
+
+        }
+        
+        ic(
+            generation_params_dict
+        )
         raw_recc_tracks = self._sp.recommendations(
-            seed_artists=self.seed_artist_uris,
-            seed_tracks=self.seed_track_uris,
-            limit=limit
+            **generation_params_dict
         )
         recc_tracks_without_genre = [
             Track(track, track_enclosed_in_item=False)
