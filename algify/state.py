@@ -84,9 +84,6 @@ class State(rx.State):
     def set_recc_target_instrumentalness_value(self, value: int):
         self.recc_target_instrumentalness_value = value / 100
 
-
-
-
     
     #### FETCHING FROM API
     def fetch_rp_tracks(self):

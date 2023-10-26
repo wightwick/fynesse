@@ -27,7 +27,7 @@ def genre_card(genre: str):
 
 def header_bar() -> rx.Component:
     return rx.center(
-        rx.heading('algify'),
+        rx.heading(''),
         size='5xl',
         margin_bottom='10',
         width='100%',
