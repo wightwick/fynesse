@@ -32,19 +32,31 @@ class Track(rx.Base):
         uri = track_dict['uri']
         track_name = track_dict['name']
 
-        artist_uris_names = [(a['uri'], a['name']) for a in track_dict['artists']]
+        # print(track_name)
+
+        artist_uris_names = [
+            (a['uri'], a['name']) 
+            for a 
+            in track_dict['artists']
+        ]
         artist_names = [name for uri, name in artist_uris_names]
 
         album_name = track_dict['album']['name']
-        spotify_url = track_dict['external_urls']['spotify']
-        
+
+        if 'spotify' in track_dict['external_urls']:
+            spotify_url = track_dict['external_urls']['spotify']
+        else:
+            spotify_url = ''
+
         raw_album_art = track_dict['album']['images']
 
         album_art = [img['url'] for img in raw_album_art]
 
         album_art_srcset = src_set_from_images_list(raw_album_art)
         
-        added_at_str = item_dict['added_at'] if 'added_at' in item_dict else item_dict['played_at']
+        added_at_str = item_dict['added_at']\
+            if 'added_at' in item_dict\
+            else item_dict['played_at']
         if added_at_str:
             added_at = added_at_str
         

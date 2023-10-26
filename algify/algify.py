@@ -6,6 +6,7 @@ from icecream import ic
 from .state import State
 
 PAGE_WIDTH = "100vw"
+GREEN = '#1DB954'
 
 def genre_card(genre: str):
     return rx.box(
@@ -24,7 +25,15 @@ def genre_card(genre: str):
         padding_left='6px'
     )
 
-def artist_card(artist_uri_name: tuple[str, str], add_remove_button: bool):
+def header_bar() -> rx.Component:
+    return rx.center(
+        rx.heading('algify'),
+        size='5xl',
+        margin_bottom='10',
+        width='100%',
+    )
+
+def artist_card(artist_uri_name: tuple[str, str], add_remove_button: bool) -> rx.Component:
     return rx.box( 
         rx.hstack(
             rx.text(artist_uri_name.__getitem__(1)),
@@ -120,12 +129,40 @@ def track_card(
                     ),
                 )
         ),
-        border_width='medium',
+        border_width='2px',
         border_radius='lg',
         overflow='hidden',
         padding_right='3',
         width='100%',
     )
+
+def sub_pane_view(
+        content: rx.Component,
+        heading: str,
+        border_color: str = None
+    ) -> rx.Component:
+    return rx.box(
+            rx.vstack(
+                rx.heading(
+                    heading,
+                    size='md',
+                    margin_bottom=-3,
+                    margin_left=2
+                ),
+                rx.box(
+                    content,
+                    
+                    border_width='medium',
+                    border_radius='xl',
+                    border_color=border_color,
+                    padding='10px',
+                    width=400
+
+                ),
+                align_items='left'
+            ),
+            
+        )
 
 def seeds_view() -> rx.Component:
     return rx.box(
@@ -182,14 +219,28 @@ def recommendations_view():
             seeds_view(),
             rx.button(
                 'Generate',
-                is_full_width=True
+                width='100%',
+                border_radius='xl'
             ),
-        ),
-        padding='3'
+            rx.cond(
+                State.recommendations_generated,
+                sub_pane_view(
+                    rx.text(''), 
+                    heading='Output', 
+                    border_color=GREEN
+                ),
+                 sub_pane_view(
+                    rx.text(''), 
+                    heading='Output', 
+                ),
+            )
+            
+        )
     )
 
 def search_view():
-    return rx.box(
+    return sub_pane_view(
+        rx.box(
             rx.vstack(
                 rx.input(
                     placeholder='Genre',
@@ -198,8 +249,9 @@ def search_view():
                 ),
             ),
             width=400
-        )
-
+        ),
+        heading='Parameters'
+    )
 
 def library_view() -> rx.Component:
     tabs = rx.tabs(
@@ -233,7 +285,11 @@ def library_view() -> rx.Component:
 #         align_items='left'
 #     )
 
-def view_pane(content: rx.component, heading_text: str) -> rx.Component:
+def pane_view(
+        content: rx.component,
+        heading_text: str,
+        padding: str = '3'
+    ) -> rx.Component:
     return rx.vstack(
         rx.heading(
             heading_text,
@@ -243,10 +299,12 @@ def view_pane(content: rx.component, heading_text: str) -> rx.Component:
         rx.box(
             content,
             border_width='thick',
-            border_radius='2xl',
+            border_radius='3xl',
+            padding=padding
         ),
         align_items='left'
     )
+    
 
 def recent_tracks_panel() -> rx.Component:
     return rx.vstack(
@@ -324,10 +382,11 @@ def liked_songs_view_panel() -> rx.Component:
 def index() -> rx.Component:
     return rx.container(
             rx.vstack(
+                header_bar(),
                 rx.flex(
-                    view_pane(library_view(), 'Library'),
-                    view_pane(recommendations_view(), 'Recommendations'),
-                    view_pane(search_view(), 'Search'),
+                    pane_view(library_view(), 'Library', padding=None),
+                    pane_view(recommendations_view(), 'Recommendations'),
+                    pane_view(search_view(), 'Search'),
                     align_items='top',
                 ),
                 rx.spacer(),

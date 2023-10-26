@@ -51,7 +51,11 @@ class State(rx.State):
     #### FETCHING FROM API
     def fetch_rp_tracks(self):
         raw_rp_tracks = self._sp.current_user_recently_played(limit=50)['items']
-        self.tracks['____recent'] = [Track(item) for item in raw_rp_tracks]
+        self.tracks['____recent'] = [
+            Track(item)
+            for item
+            in raw_rp_tracks
+        ]
         self.rp_tracks_have_genre = False
 
     def fetch_liked_tracks_batch(self):
@@ -59,7 +63,10 @@ class State(rx.State):
             limit=50,
             offset=len(self.tracks['____liked'])
         )['items']
-        self.tracks['____liked'] = [*self.tracks['____liked'], *[Track(item) for item in raw_liked_tracks]]
+        self.tracks['____liked'] = [
+            *self.tracks['____liked'],
+            *[Track(item) for item in raw_liked_tracks]
+        ]
         self.liked_tracks_have_genre = False
 
     def _update_genre_dict_from_artist_uris(
@@ -76,7 +83,7 @@ class State(rx.State):
             chunk = a_uris_subset[i:i + chunk_size] 
             output_chunk = self._sp.artists(chunk)
             artists.extend(output_chunk['artists'])
-            
+
         genre_lookup_lists = [
             {a['uri']:a['genres']} for a in
             artists
@@ -130,7 +137,12 @@ class State(rx.State):
     def fetch_playlists(self):
         print("Fetching playlist info")
 
-        pl_items = self._sp.current_user_playlists()['items']
+        pl_results = self._sp.current_user_playlists()
+        pl_items = pl_results['items']
+        while pl_results['next']:
+            pl_results = self._sp.next(pl_results)
+            pl_items.extend(pl_results['items'])
+
         self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
 
         # ensure uniqueness of names
@@ -153,9 +165,10 @@ class State(rx.State):
             playlist_tracks.extend(pl_results['items'])
         
         self.tracks[playlist.playlist_name] = [
-            Track(i)
-            for i in playlist_tracks
-            if i['track']
+            Track(item)
+            for item in playlist_tracks
+            if item['track']
+            and 'spotify:local' not in item['track']['uri']
         ]
 
 
@@ -254,3 +267,8 @@ class State(rx.State):
     @rx.var
     def playlist_names(self) -> list[str]:
         return [p.playlist_name for p in self.playlists]
+    
+    # TODO: PUT ACTUAL LOGIC HERE ONCE RECS GEN!!
+    @rx.var
+    def recommendations_generated(self) -> bool:
+        return False
