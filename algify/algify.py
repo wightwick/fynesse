@@ -76,9 +76,26 @@ def track_remove_seed_button(track: Track) -> rx.Component:
         on_click=State.remove_track_uri_from_seeds(track.uri),
     )
 
+def track_play_button(track: Track) -> rx.Component:
+    return rx.button(
+        rx.box(
+            rx.icon(tag='triangle_down'),
+            transform='rotate(-90deg)'
+        ),
+        on_click=State.play_track_uri(track.uri),
+    )
+
+def track_queue_button(track: Track) -> rx.Component:
+    return rx.button(
+        rx.icon(tag='plus_square'),
+        on_click=State.queue_track_uri(track.uri),
+     )
+
+
+
 def track_card(
         track: Track,
-        button: rx.Component,
+        buttons: list[rx.Component],
         artists_interactive: bool,
         show_genres: bool=False,
         genres_interactive: bool=True
@@ -116,8 +133,6 @@ def track_card(
                     
                     rx.cond(
                         (track.artist_genres.length() > 0) & show_genres, 
-                        
-                        
                         rx.cond(
                             genres_interactive,
                             rx.wrap(
@@ -130,17 +145,13 @@ def track_card(
                             ),
                             rx.text('#' + track.artist_genres.join(', #'), as_='small')
                         ),
-                        
-
-
-
                         rx.text('')
                     ),
 
                     align_items='left',
                 ),
                 rx.spacer(),
-                button
+                rx.vstack(*buttons)
         ),
         border_width=2,
         border_radius='lg',
@@ -160,16 +171,17 @@ def sub_pane_view(
                     heading,
                     size='md',
                     margin_bottom=-3,
-                    margin_left=2
+                    margin_left=2,
+                    z_index=2
                 ),
                 rx.box(
                     content,
                     border_width='medium',
                     border_radius='xl',
                     border_color=border_color,
-                    padding='10px',
-                    width=400
-
+                    padding=15,
+                    width=400,
+                    z_index=1
                 ),
                 align_items='left'
             ),
@@ -178,31 +190,33 @@ def sub_pane_view(
 
 def seeds_list() -> rx.Component:
     return rx.box(
-            rx.vstack(
-            
+            rx.cond(State.too_few_seeds,
+                rx.center(rx.text('add some seeds', opacity=0.3)),
                 rx.vstack(
-                    rx.foreach(
-                        State.seed_tracks,
-                        lambda x: rx.wrap_item(
-                            track_card(
-                                track=x,
-                                show_genres=False,
-                                artists_interactive=False,
-                                button=track_remove_seed_button(x)
-                            )
+                    rx.vstack(
+                        rx.foreach(
+                            State.seed_tracks,
+                            lambda x: rx.wrap_item(
+                                track_card(
+                                    track=x,
+                                    show_genres=False,
+                                    artists_interactive=False,
+                                    buttons=[track_remove_seed_button(x)]
+                                )
+                            ),
                         ),
                     ),
-                ),
-                rx.vstack(
-                    rx.foreach(
-                        State.seed_artists,
-                        lambda x: rx.wrap_item(
-                            artist_card(x, False)
+                    rx.vstack(
+                        rx.foreach(
+                            State.seed_artists,
+                            lambda x: rx.wrap_item(
+                                artist_card(x, False)
+                            ),
                         ),
                     ),
+                    align_items='center'
                 ),
-                align_items='center'
-            ),
+            )
         )
 
 def seeds_view() -> rx.Component:
@@ -296,7 +310,7 @@ def recommendations_view():
             rx.button(
                 'Generate',
                 on_click=State.fetch_recommendations(),
-                is_disabled=State.too_many_seeds,
+                is_disabled=State.too_many_seeds | State.too_few_seeds,
                 width='100%',
                 border_radius='xl'
             ),
@@ -312,7 +326,10 @@ def recommendations_view():
                                     show_genres=True,
                                     genres_interactive=False,
                                     artists_interactive=False,
-                                    button=track_remove_seed_button(x)
+                                    buttons=[
+                                        track_play_button(x),
+                                        track_queue_button(x)
+                                    ]
                                 )
                             ),
                         ),
@@ -339,7 +356,7 @@ def search_view():
                     on_change=State.set_search_genre,    
                 ),
             ),
-            width=400
+            width=400,
         ),
         heading='Parameters'
     )
@@ -347,14 +364,14 @@ def search_view():
 def library_view() -> rx.Component:
     tabs = rx.tabs(
         rx.tab_list(
-            rx.tab('Recently Played'),
             rx.tab('Liked Songs'),
             rx.tab('Playlist'),
+            rx.tab('Recently Played'),
         ),
         rx.tab_panels(
-            rx.tab_panel(recent_tracks_panel()),
             rx.tab_panel(liked_songs_view_panel()),
             rx.tab_panel(playlist_browser_panel()),
+            rx.tab_panel(recent_tracks_panel()),
         ),
     )
   
@@ -416,7 +433,7 @@ def recent_tracks_panel() -> rx.Component:
                                 track=x,
                                 show_genres=True,
                                 artists_interactive=True,
-                                button=track_add_seed_button(x, source='recent')
+                                buttons=[track_add_seed_button(x, source='recent')]
                             )
             ),
         )
@@ -443,7 +460,7 @@ def playlist_browser_panel() -> rx.Component:
                             track=x,
                             show_genres=True,
                             artists_interactive=True,
-                            button=track_add_seed_button(x, source='playlist')
+                            buttons=[track_add_seed_button(x, source='playlist')]
                         )
         ),
         align_items='left',
@@ -464,7 +481,7 @@ def liked_songs_view_panel() -> rx.Component:
                                 track=x,
                                 show_genres=True,
                                 artists_interactive=True,
-                                button=track_add_seed_button(x, source='liked')
+                                buttons=[track_add_seed_button(x, source='liked')]
                             )
             ),
             rx.button('Load more', on_click=State.fetch_liked_tracks_batch)
@@ -489,5 +506,5 @@ def index() -> rx.Component:
 
 # Add state and page to the app.
 app = rx.App()
-app.add_page(index, on_load=State.on_load_fetch)
+app.add_page(index, on_load=State.on_load_library_fetch)
 app.compile()

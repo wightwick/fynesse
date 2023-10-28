@@ -85,7 +85,7 @@ class State(rx.State):
         self.recc_target_instrumentalness_value = value / 100
 
     
-    #### FETCHING FROM API
+    #### LIBRARY FROM API
     def fetch_rp_tracks(self):
         raw_rp_tracks = self._sp.current_user_recently_played(limit=50)['items']
         self.lib_tracks['____recent'] = [
@@ -113,7 +113,12 @@ class State(rx.State):
     ):
         artists = []
         chunk_size = 50
-        a_uris_subset = list(set(a_uris).difference(set(existing_genre_lookup.keys())))
+        a_uris_subset = list(
+            set(a_uris)
+                .difference(
+                    set(existing_genre_lookup.keys())
+                )
+        )
 
         for i in range(0, len(a_uris_subset), chunk_size):
             print('Fetching batch of artist genres')
@@ -125,7 +130,13 @@ class State(rx.State):
             {a['uri']:a['genres']} for a in
             artists
         ]
-        genre_lookup = {k: v for d in genre_lookup_lists for k, v in d.items()}
+        genre_lookup = {
+            k: v
+            for d
+            in genre_lookup_lists
+            for k, v
+            in d.items()
+        }
         genre_lookup.update(existing_genre_lookup)
 
         return genre_lookup
@@ -159,17 +170,6 @@ class State(rx.State):
 
 
     def _add_genres_to_lib_track_list(self, list_name: str):
-        # artist_uris = flatten_list_of_lists(
-        #     [
-        #         t.artist_uris
-        #         for t in self.lib_tracks[list_name]
-        #     ]
-        # )
-        # self._genre_lookup = self._update_genre_dict_from_artist_uris(
-        #     artist_uris,
-        #     self._genre_lookup,
-        # )
-
         self.lib_tracks[list_name] = self._fetch_genres_for_track_list(
             self.lib_tracks[list_name]
         )
@@ -190,6 +190,51 @@ class State(rx.State):
             for pl
             in self.playlists
         ]
+
+    def fetch_playlists(self):
+        print("Fetching playlist info")
+
+        pl_results = self._sp.current_user_playlists()
+        pl_items = pl_results['items']
+        while pl_results['next']:
+            pl_results = self._sp.next(pl_results)
+            pl_items.extend(pl_results['items'])
+
+        self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
+
+        # ensure uniqueness of names
+        playlist_counts = {}
+        for playlist in self.playlists:
+            name = playlist.playlist_name
+            if name in playlist_counts:
+                playlist_counts[name] += 1
+                playlist.playlist_name = f"{name} ({playlist_counts[name]})"
+            else:
+                playlist_counts[name] = 1        
+
+    def fetch_tracks_for_playlist(self, playlist: Playlist):
+        print("Fetching playlist tracks for PL", playlist.playlist_name)
+
+        pl_results = self._sp.playlist_items(playlist.uri)
+        playlist_tracks = pl_results['items']
+        while pl_results['next']:
+            pl_results = self._sp.next(pl_results)
+            playlist_tracks.extend(pl_results['items'])
+        
+        self.lib_tracks[playlist.playlist_name] = [
+            Track(item)
+            for item in playlist_tracks
+            if item['track']
+            and 'spotify:local' not in item['track']['uri']
+        ]
+
+    def on_load_library_fetch(self):
+        self.fetch_rp_tracks()
+        self.fetch_liked_tracks_batch()
+        self.fetch_playlists()
+        self.selected_playlist = self.playlists[0]
+        self.fetch_tracks_for_playlist(self.selected_playlist)
+
 
     ### RECOMMENDATIONS FROM API
     def fetch_recommendations(
@@ -230,54 +275,21 @@ class State(rx.State):
         self.recc_tracks = self._fetch_genres_for_track_list(
             recc_tracks_without_genre
         )
+
+    ### PLAYBACK STATE
+    def play_track_uri(self, track_uri: Track):
+        print('Playing')
+        ic(track_uri, self.active_devices)
+        if len(self.active_devices) > 0:
+            self._sp.start_playback(uris=[track_uri])
+
+    def queue_track_uri(self, track_uri: Track):
+        print('Queueing')
+        ic(track_uri, self.active_devices)
+        if len(self.active_devices) > 0:
+            self._sp.add_to_queue(track_uri)
+
         
-
-
-    def fetch_playlists(self):
-        print("Fetching playlist info")
-
-        pl_results = self._sp.current_user_playlists()
-        pl_items = pl_results['items']
-        while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
-            pl_items.extend(pl_results['items'])
-
-        self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
-
-        # ensure uniqueness of names
-        playlist_counts = {}
-        for playlist in self.playlists:
-            name = playlist.playlist_name
-            if name in playlist_counts:
-                playlist_counts[name] += 1
-                playlist.playlist_name = f"{name} ({playlist_counts[name]})"
-            else:
-                playlist_counts[name] = 1        
-
-    def fetch_tracks_for_playlist(self, playlist: Playlist):
-        print("Fetching playlist tracks for PL", playlist.playlist_name)
-
-        pl_results = self._sp.playlist_items(playlist.uri)
-        playlist_tracks = pl_results['items']
-        while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
-            playlist_tracks.extend(pl_results['items'])
-        
-        self.lib_tracks[playlist.playlist_name] = [
-            Track(item)
-            for item in playlist_tracks
-            if item['track']
-            and 'spotify:local' not in item['track']['uri']
-        ]
-
-
-    def on_load_fetch(self):
-        self.fetch_rp_tracks()
-        self.fetch_liked_tracks_batch()
-        self.fetch_playlists()
-        self.selected_playlist = self.playlists[0]
-        self.fetch_tracks_for_playlist(self.selected_playlist)
-
     ### PLAYLISTS
     def select_playlist(self, pl_name: str):
         self.selected_playlist = [
@@ -368,10 +380,20 @@ class State(rx.State):
         return [p.playlist_name for p in self.playlists]
     
     @rx.var
+    def total_seeds(self) -> int:
+        return len(self.seed_artists) + len(self.seed_tracks)
+    @rx.var
     def too_many_seeds(self) -> bool:
-        return len(self.seed_artists) + len(self.seed_tracks) > 5
+        return self.total_seeds > 5
+    
+    @rx.var
+    def too_few_seeds(self) -> bool:
+        return self.total_seeds == 0
 
     @rx.var
     def recommendations_generated(self) -> bool:
         return len(self.recc_tracks) > 0
-             
+    
+    @rx.var
+    def active_devices(self) -> bool:
+        return [d for d in self._sp.devices()['devices'] if d['is_active']]
