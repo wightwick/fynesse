@@ -196,22 +196,19 @@ def seeds_list() -> rx.Component:
                     rx.vstack(
                         rx.foreach(
                             State.seed_tracks,
-                            lambda x: rx.wrap_item(
-                                track_card(
+                            lambda x: track_card(
                                     track=x,
                                     show_genres=False,
                                     artists_interactive=False,
                                     buttons=[track_remove_seed_button(x)]
                                 )
-                            ),
                         ),
+                        width='100%'
                     ),
                     rx.vstack(
                         rx.foreach(
                             State.seed_artists,
-                            lambda x: rx.wrap_item(
-                                artist_card(x, False)
-                            ),
+                            lambda x: artist_card(x, False)
                         ),
                     ),
                     align_items='center'
@@ -320,19 +317,18 @@ def recommendations_view():
                     rx.vstack(
                         rx.foreach(
                             State.recc_tracks,
-                            lambda x: rx.wrap_item(
-                                track_card(
-                                    track=x,
-                                    show_genres=True,
-                                    genres_interactive=False,
-                                    artists_interactive=False,
-                                    buttons=[
-                                        track_play_button(x),
-                                        track_queue_button(x)
-                                    ]
-                                )
-                            ),
+                            lambda x: track_card(
+                                track=x,
+                                show_genres=True,
+                                genres_interactive=False,
+                                artists_interactive=False,
+                                buttons=[
+                                    track_play_button(x),
+                                    track_queue_button(x)
+                                ]
+                            )
                         ),
+                        width='100%'
                     ), 
                     heading='Output', 
                     border_color=GREEN
@@ -379,24 +375,10 @@ def library_view() -> rx.Component:
         tabs,
         width=400
     )
-# rx.vstack(
-#         rx.heading(
-#             'Library',
-#             margin_left='2',
-#             margin_bottom='-4'
-#         ),
-#         rx.box(
-#             tabs,
-#             border_width='thick',
-#             border_radius='xl',
-#         ),
-#         align_items='left'
-#     )
-
 def pane_view(
         content: rx.component,
         heading_text: str,
-        padding: int = 3
+        padding: int = 4
     ) -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -436,6 +418,7 @@ def recent_tracks_panel() -> rx.Component:
                                 buttons=[track_add_seed_button(x, source='recent')]
                             )
             ),
+            width='100%'
         )
     )
 
@@ -461,7 +444,8 @@ def playlist_browser_panel() -> rx.Component:
                             show_genres=True,
                             artists_interactive=True,
                             buttons=[track_add_seed_button(x, source='playlist')]
-                        )
+                        ),
+            width='100%'
         ),
         align_items='left',
     )
@@ -484,7 +468,8 @@ def liked_songs_view_panel() -> rx.Component:
                                 buttons=[track_add_seed_button(x, source='liked')]
                             )
             ),
-            rx.button('Load more', on_click=State.fetch_liked_tracks_batch)
+            rx.button('Load more', on_click=State.fetch_liked_tracks_batch),
+            width='100%'
         ),
     )
 
