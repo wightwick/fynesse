@@ -3,6 +3,7 @@ from spotipy import Spotify, SpotifyOAuth
 from spotify_secrets import *
 from .data import Track, Playlist
 from .utilities import *
+from .constants import *
 from icecream import ic
 
 scopes = [
@@ -38,7 +39,12 @@ class State(rx.State):
         )
     )
 
-    lib_tracks: dict[str, list[Track]] = {'____recent': [], '____liked': [], '': []}
+    lib_tracks: dict[str, list[Track]] = {
+        '____recent': [],
+        '____liked': [],
+        '____search': [], 
+        '': []
+    }
     recc_tracks: list[Track] = []
     playlists: list[Playlist]
     rp_tracks_have_genre: bool = False
@@ -46,7 +52,6 @@ class State(rx.State):
 
     seed_track_uris_with_source: list[tuple[str, str]]
     seed_genres: list[str]
-    search_genre: str = ''
     seed_artists: list[tuple[str, str]]
     selected_playlist: Playlist = Playlist()
     _genre_lookup: dict[str, str] = dict()
@@ -87,7 +92,7 @@ class State(rx.State):
     def set_recc_target_instrumentalness_value(self, value: int):
         self.recc_target_instrumentalness_value = value / 100
 
-    num_recommendations: int = 10
+    num_recommendations: int = NUM_RECCOMENDATIONS_DEFAULT
     
     #### LIBRARY FROM API
     def fetch_rp_tracks(self):
@@ -315,19 +320,6 @@ class State(rx.State):
         if pl_name not in self.lib_tracks:
             self.fetch_tracks_for_playlist(self.selected_playlist)
 
-    ### SEARCH
-    genre_search_enabled: bool = True
-
-    def stage_genre_for_search(self, genre):
-        self.search_genre = genre
-    
-    def clear_search_genre(self):
-        self.search_genre = ''
-
-    def enable_disable_genre_search(self, enabled: bool):
-        self.genre_search_enabled = enabled
-
-
     #### SEEDING
     def add_track_uri_to_seeds(self, uri: str, source: str):
         if uri not in self.seed_track_uris_with_source:
@@ -447,3 +439,83 @@ class PlaylistDialogState(State):
     @rx.var
     def name_invalid(self) -> bool:
         return self.pl_name is None
+
+class SearchState(State):
+    search_genre: str
+    genre_search_enabled: bool = False
+
+    search_year: str
+    year_search_enabled: bool = False
+
+    search_name: str
+    name_search_enabled: bool = False
+
+    num_results: int = NUM_SEARCH_RESULTS_DEFAULT
+
+    results_fetched: bool = False
+
+    def stage_genre_for_search(self, genre):
+        self.genre_search_enabled = True
+        self.search_genre = genre
+    
+    def enable_genre_search(self):
+        self.genre_search_enabled = True
+
+    def toggle_genre_search(self, enabled: bool):
+        self.genre_search_enabled = enabled
+
+    def enable_name_search(self):
+        self.name_search_enabled = True
+
+    def toggle_name_search(self, enabled: bool):
+        self.name_search_enabled = enabled
+
+    def enable_year_search(self):
+        self.year_search_enabled = True
+
+    def toggle_year_search(self, enabled: bool):
+        self.year_search_enabled = enabled
+
+    def fetch_search_results(self):
+        print('Fetching search results')
+        query_text = self.combined_search_query
+        ic(query_text)
+
+        raw_tracks = self._sp.search(
+            q=self.combined_search_query,
+            type='track',
+            limit=self.num_results
+        )['tracks']['items']
+
+        self.lib_tracks['____search'] = [
+            Track(track, track_enclosed_in_item=False)
+            for track
+            in raw_tracks
+        ]
+        self.results_fetched = True
+
+    @rx.var
+    def combined_search_query(self) -> str:
+        name_query_section = f'track: "{self.search_name}"'\
+            if self.name_search_enabled\
+            else ''
+        genre_query_section = f' genre:"{self.search_genre}"'\
+            if self.genre_search_enabled\
+            else ''
+        year_query_section = f' year:{self.search_year}'\
+            if self.year_search_enabled\
+            else ''
+        
+        return (
+            name_query_section +
+            genre_query_section +
+            year_query_section
+        ).strip()
+    
+    @rx.var
+    def search_disabled(self) -> bool:
+        return len(self.combined_search_query) == 0
+    
+    @rx.var
+    def search_result_tracks(self) -> list[Track]:
+        return self.lib_tracks['____search']

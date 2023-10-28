@@ -3,7 +3,8 @@ from rxconfig import config
 import reflex as rx
 from algify.data import Track
 from icecream import ic
-from .state import State, PlaylistDialogState
+from .state import *
+from .constants import *
 
 PAGE_WIDTH = "100vw"
 GREEN = '#1DB954'
@@ -14,7 +15,7 @@ def genre_card(genre: str):
             rx.text('#' + genre, as_='small'),
                 rx.button(
                     rx.icon(tag="search"),
-                    on_click=State.stage_genre_for_search(genre),
+                    on_click=SearchState.stage_genre_for_search(genre),
                     
                     size='xs',
                     variant='ghost'
@@ -89,9 +90,29 @@ def track_queue_button(track: Track) -> rx.Component:
     return rx.button(
         rx.icon(tag='plus_square'),
         on_click=State.queue_track_uri(track.uri),
-     ) 
+     )
 
-
+def track_multi_button(track: Track) -> rx.Component:
+    return rx.popover(
+        rx.popover_trigger(
+            rx.button(
+                rx.icon(tag='triangle_down'),
+                # on_click=State.queue_track_uri(track.uri),
+            )
+        ),
+        rx.popover_content(
+            rx.popover_header(height=8),
+            rx.popover_body(
+                rx.vstack(
+                    track_add_seed_button(track, source='search'),
+                    track_play_button(track),
+                    track_queue_button(track),
+                )
+            ),
+            rx.popover_close_button(),
+            width='30'
+        ),
+    )
 
 def track_card(
         track: Track,
@@ -170,7 +191,7 @@ def sub_pane_view(
                 rx.heading(
                     heading,
                     size='md',
-                    margin_bottom=-3,
+                    margin_bottom='-13px',
                     margin_left=2,
                     z_index=2
                 ),
@@ -199,7 +220,7 @@ def hint_text(text: str):
 def seeds_list() -> rx.Component:
     return rx.box(
             rx.cond(State.too_few_seeds,
-                hint_text('add some seeds'),
+                hint_text('plant some seeds'),
                 rx.vstack(
                     rx.vstack(
                         rx.foreach(
@@ -264,13 +285,27 @@ def switchable_param_slider(
     )
 
 def param_slider(
-        param_name: str,
+        text: str,
         state_value_setter: callable,
-        value: int,
+        default_value: int,
         min_max: list[int]
     ):
-
-    return 
+    return rx.box(
+        rx.vstack(
+            rx.text(
+                text,
+                as_='b'
+            ),
+            rx.slider(
+                    default_value=default_value,
+                    on_change=state_value_setter,
+                    min_=min_max[0],
+                    max_=min_max[1]
+            ),
+            align_items='left'
+        ),
+        width='100%'
+    )
 
 def playlist_create_dialog(): 
     return rx.alert_dialog(
@@ -347,41 +382,20 @@ def recommendations_view():
                         state_enabled_var=State.recc_target_instrumentalness_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_instrumentalness
                     ),
-
-                    rx.box(
-                        rx.vstack(
-                            rx.text(
-                                f'Number of recommended tracks: {State.num_recommendations}',
-                                as_='b'
-                            ),
-                                rx.slider(
-                                        # value=State.num_recommendations,
-                                        default_value=10,
-                                        on_change=State.set_num_recommendations,
-                                        min_=1,
-                                        max_=100
-                                ),
-                            align_items='left'
-                        ),
-                        width='100%'
-                    ),
-
-                    # param_slider(
-                    #     'Number of recommended tracks',
-                    #     value=State.num_recommendations,
-                    #     min_max=[0, 100],
-                    #     state_value_setter=State.set_num_recommendations,
-                    # ),
+                    param_slider(
+                        text=f'Number of recommended tracks: {State.num_recommendations}',
+                        state_value_setter=State.set_num_recommendations,
+                        default_value=NUM_RECCOMENDATIONS_DEFAULT,
+                        min_max=[1,100]
+                    )
                 ),
 
                 heading='Parameters'
             ),
-            rx.button(
-                'Generate',
+            pane_button(
+                text='Generate',
                 on_click=State.fetch_recommendations(),
                 is_disabled=State.too_many_seeds | State.too_few_seeds,
-                width='100%',
-                border_radius='xl'
             ),
             rx.cond(
                 State.recommendations_generated,
@@ -413,16 +427,16 @@ def recommendations_view():
                         ),
                         width='100%'
                     ), 
-                    heading='Output', 
+                    heading='Results', 
                     border_color=GREEN
                 ),
-                 sub_pane_view(
+                sub_pane_view(
                     rx.cond(
                         ~(State.too_few_seeds | State.too_many_seeds),
                         hint_text('click generate'),
                         rx.text('')
                     ),
-                    heading='Output', 
+                    heading='Results', 
                 ),
             )
             
@@ -460,19 +474,84 @@ def switchable_input_field(
     )
 
 def search_view():
-    return sub_pane_view(
-        rx.box(
-            rx.vstack(
-                switchable_input_field(
-                    name='Genre',
-                    value=State.search_genre,
-                    on_change=State.set_search_genre,
-                    state_enabled_var=State.genre_search_enabled,
-                    state_enable_disable_fn=State.enable_disable_genre_search
-                )
+    return rx.vstack(
+        sub_pane_view(
+            rx.box(
+                rx.vstack(
+                    switchable_input_field(
+                        name='Name',
+                        value=SearchState.search_name,
+                        on_change=SearchState.set_search_name,
+                        state_enabled_var=SearchState.name_search_enabled,
+                        state_enable_disable_fn=SearchState.toggle_name_search
+                    ),
+                    switchable_input_field(
+                        name='Genre',
+                        value=SearchState.search_genre,
+                        on_change=SearchState.set_search_genre,
+                        state_enabled_var=SearchState.genre_search_enabled,
+                        state_enable_disable_fn=SearchState.toggle_genre_search
+                    ),
+                    switchable_input_field(
+                        name='Year',
+                        value=SearchState.search_year,
+                        on_change=SearchState.set_search_year,
+                        state_enabled_var=SearchState.year_search_enabled,
+                        state_enable_disable_fn=SearchState.toggle_year_search
+                    ),
+                    param_slider(
+                        text=f'Number of results: {SearchState.num_results}',
+                        state_value_setter=SearchState.set_num_results,
+                        default_value=NUM_SEARCH_RESULTS_DEFAULT,
+                        min_max=[1,50]
+                    )
+                ),
             ),
+            heading='Parameters'
         ),
-        heading='Parameters'
+        pane_button(
+            text='Search', 
+            on_click=SearchState.fetch_search_results(),
+            is_disabled=SearchState.search_disabled
+        ),
+        rx.cond(
+            SearchState.results_fetched,
+            sub_pane_view(
+                rx.vstack(
+                    # rx.hstack(
+                    #     sub_pane_button(
+                    #         text='Play all',
+                    #         on_click=State.play_all_recommended_tracks
+                    #     ),
+                    #     sub_pane_button(
+                    #         text='Export to playlist',
+                    #         on_click=PlaylistDialogState.change
+                    #     ),
+                    #     width='100%'
+                    # ),
+                    rx.foreach(
+                        SearchState.search_result_tracks,
+                        lambda x: track_card(
+                            track=x,
+                            show_genres=True,
+                            genres_interactive=False,
+                            artists_interactive=False,
+                            buttons=[
+                                track_multi_button(x)
+                            ]
+                        )
+                    ),
+                    width='100%'
+                ), 
+                heading='Results', 
+                border_color=GREEN
+            ),
+            sub_pane_view(
+                hint_text('search for something'),
+                   
+                heading='Results', 
+            ),
+        )
     )
 
 def library_view() -> rx.Component:
@@ -529,6 +608,20 @@ def sub_pane_button(
         is_disabled=is_disabled,
         width='100%'
     )
+
+def pane_button(
+        text: str,
+        on_click: callable,
+        is_disabled: bool = False
+):
+    return rx.button(
+        text,
+        on_click=on_click,
+        is_disabled=is_disabled,
+        width='100%',
+        border_radius='xl'
+    )
+
 
 def recent_tracks_panel() -> rx.Component:
     return rx.vstack(
