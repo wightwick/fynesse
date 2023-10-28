@@ -3,7 +3,7 @@ from rxconfig import config
 import reflex as rx
 from algify.data import Track
 from icecream import ic
-from .state import State
+from .state import State, PlaylistDialogState
 
 PAGE_WIDTH = "100vw"
 GREEN = '#1DB954'
@@ -82,14 +82,14 @@ def track_play_button(track: Track) -> rx.Component:
             rx.icon(tag='triangle_down'),
             transform='rotate(-90deg)'
         ),
-        on_click=State.play_track_uri(track.uri),
+        on_click=State.play_track_uris([track.uri]),
     )
 
 def track_queue_button(track: Track) -> rx.Component:
     return rx.button(
         rx.icon(tag='plus_square'),
         on_click=State.queue_track_uri(track.uri),
-     )
+     ) 
 
 
 
@@ -188,10 +188,18 @@ def sub_pane_view(
             
         )
 
+def hint_text(text: str):
+    return rx.text(
+        text,
+        opacity=0.3,
+        text_align='center',
+    )
+    
+
 def seeds_list() -> rx.Component:
     return rx.box(
             rx.cond(State.too_few_seeds,
-                rx.center(rx.text('add some seeds', opacity=0.3)),
+                hint_text('add some seeds'),
                 rx.vstack(
                     rx.vstack(
                         rx.foreach(
@@ -217,20 +225,13 @@ def seeds_list() -> rx.Component:
         )
 
 def seeds_view() -> rx.Component:
-    return rx.cond(
-        State.too_many_seeds,
-        sub_pane_view(
-            content=seeds_list(),
-            heading='Seeds',
-            border_color='red'
-        ),
-        sub_pane_view(
-            content=seeds_list(),
-            heading='Seeds'
-        )
+    return sub_pane_view(
+        content=seeds_list(),
+        heading='Seeds',
+        border_color=rx.cond(State.too_many_seeds, 'red', '')
     )
 
-def param_slider(
+def switchable_param_slider(
         param_name: str,
         # initial_value: rx.var,
         state_value_setter: callable,
@@ -261,7 +262,54 @@ def param_slider(
         ),
         width='100%'
     )
-            
+
+def param_slider(
+        param_name: str,
+        state_value_setter: callable,
+        value: int,
+        min_max: list[int]
+    ):
+
+    return 
+
+def playlist_create_dialog(): 
+    return rx.alert_dialog(
+        rx.alert_dialog_overlay(
+            rx.alert_dialog_content(
+                rx.hstack(
+                    rx.box(
+                        rx.alert_dialog_header(
+                            'Export to playlist',
+                        ),
+                        width='100%'
+                    ),
+                    rx.spacer(),
+                    rx.box(
+                        rx.button(
+                            rx.icon(tag='close'),
+                            on_click=PlaylistDialogState.change,
+                        ),
+                        padding_right=6
+                    )
+                ),
+                rx.alert_dialog_body(
+                    rx.input(
+                        placeholder='name',
+                        on_change=PlaylistDialogState.set_pl_name,
+                    ),
+                ),
+                rx.alert_dialog_footer(
+                    rx.button(
+                        "Create playlist",
+                        on_click=PlaylistDialogState.create_and_dismiss(),
+                        is_disabled=PlaylistDialogState.name_invalid
+                    )
+                ),
+            )
+        ),
+        is_open=PlaylistDialogState.show,
+    )
+
 
 def recommendations_view():
     return rx.box(
@@ -269,37 +317,61 @@ def recommendations_view():
             seeds_view(),
             sub_pane_view(
                 content=rx.vstack(
-                    param_slider(
+                    switchable_param_slider(
                         'Target acousticness',
                         state_value_setter=State.set_recc_target_acousticness_value,
                         state_enabled_var=State.recc_target_acousticness_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_acousticness
                     ),
-                    param_slider(
+                    switchable_param_slider(
                         'Target energy',
                         state_value_setter=State.set_recc_target_energy_value,
                         state_enabled_var=State.recc_target_energy_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_energy
                     ),
-                    param_slider(
+                    switchable_param_slider(
                         'Target liveness',
                         state_value_setter=State.set_recc_target_liveness_value,
                         state_enabled_var=State.recc_target_liveness_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_liveness
                     ),
-                    param_slider(
+                    switchable_param_slider(
                         'Target danceability',
                         state_value_setter=State.set_recc_target_danceability_value,
                         state_enabled_var=State.recc_target_danceability_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_danceability
                     ),
-                    param_slider(
+                    switchable_param_slider(
                         'Target instrumentalness',
                         state_value_setter=State.set_recc_target_instrumentalness_value,
                         state_enabled_var=State.recc_target_instrumentalness_enabled,
                         state_enable_disable_fn=State.enable_disable_recc_target_instrumentalness
-                    )
+                    ),
 
+                    rx.box(
+                        rx.vstack(
+                            rx.text(
+                                f'Number of recommended tracks: {State.num_recommendations}',
+                                as_='b'
+                            ),
+                                rx.slider(
+                                        # value=State.num_recommendations,
+                                        default_value=10,
+                                        on_change=State.set_num_recommendations,
+                                        min_=1,
+                                        max_=100
+                                ),
+                            align_items='left'
+                        ),
+                        width='100%'
+                    ),
+
+                    # param_slider(
+                    #     'Number of recommended tracks',
+                    #     value=State.num_recommendations,
+                    #     min_max=[0, 100],
+                    #     state_value_setter=State.set_num_recommendations,
+                    # ),
                 ),
 
                 heading='Parameters'
@@ -315,6 +387,17 @@ def recommendations_view():
                 State.recommendations_generated,
                 sub_pane_view(
                     rx.vstack(
+                        rx.hstack(
+                            sub_pane_button(
+                                text='Play all',
+                                on_click=State.play_all_recommended_tracks
+                            ),
+                            sub_pane_button(
+                                text='Export to playlist',
+                                on_click=PlaylistDialogState.change
+                            ),
+                            width='100%'
+                        ),
                         rx.foreach(
                             State.recc_tracks,
                             lambda x: track_card(
@@ -334,25 +417,60 @@ def recommendations_view():
                     border_color=GREEN
                 ),
                  sub_pane_view(
-                    rx.text(''), 
+                    rx.cond(
+                        ~(State.too_few_seeds | State.too_many_seeds),
+                        hint_text('click generate'),
+                        rx.text('')
+                    ),
                     heading='Output', 
                 ),
             )
             
-        )
+        ),
+        playlist_create_dialog()
+    )
+
+def switchable_input_field(
+        name: str,
+        value: callable,
+        on_change: callable,
+        state_enabled_var: callable,
+        state_enable_disable_fn: callable,
+    ):
+    return rx.vstack(
+        rx.text(
+            name,
+            margin_bottom=-3.5,
+            margin_left=1,
+            opacity=rx.cond(state_enabled_var, 1, 0.5)
+        ),
+        rx.hstack(
+            rx.input(
+                value=value,
+                on_change=on_change,
+                is_disabled=~state_enabled_var,
+            ),
+            rx.switch(
+                is_checked=state_enabled_var,
+                on_change=state_enable_disable_fn
+            )
+        ),
+        align_items='left',
+        width='100%'
     )
 
 def search_view():
     return sub_pane_view(
         rx.box(
             rx.vstack(
-                rx.input(
-                    placeholder='Genre',
+                switchable_input_field(
+                    name='Genre',
                     value=State.search_genre,
-                    on_change=State.set_search_genre,    
-                ),
+                    on_change=State.set_search_genre,
+                    state_enabled_var=State.genre_search_enabled,
+                    state_enable_disable_fn=State.enable_disable_genre_search
+                )
             ),
-            width=400,
         ),
         heading='Parameters'
     )
@@ -384,7 +502,7 @@ def pane_view(
         rx.vstack(
             rx.heading(
                 heading_text,
-                margin_left=2,
+                margin_left=4,
                 margin_bottom=-4
             ),
             rx.box(
@@ -399,13 +517,24 @@ def pane_view(
         margin_right=1
     )
     
+def sub_pane_button(
+        text: str,
+        on_click: callable,
+        is_disabled: bool = False
+    ):
+    return rx.button(
+        rx.text(text),
+        on_click=on_click,
+        size='md',
+        is_disabled=is_disabled,
+        width='100%'
+    )
 
 def recent_tracks_panel() -> rx.Component:
     return rx.vstack(
-        rx.button(
-            rx.text('Get genres'),
+        sub_pane_button(
+            text='See artist genres',
             on_click=State.fetch_genres_rp,
-            size='md',
             is_disabled=State.rp_tracks_have_genre,
         ),
         rx.vstack(
@@ -425,15 +554,13 @@ def recent_tracks_panel() -> rx.Component:
 def playlist_browser_panel() -> rx.Component:
     return rx.vstack(
         rx.hstack(
-            rx.spacer(),
             rx.select(
                 State.playlist_names,
                 on_change=State.select_playlist,
             ),
-            rx.spacer(),
-            rx.button(
-                rx.text('Get genres'),
-                on_click=State.fetch_genres_selected_pl, size='md',
+            sub_pane_button(
+                text='See artist genres',
+                on_click=State.fetch_genres_selected_pl,
                 is_disabled=State.selected_playlist.has_genres,
             )
         ),
@@ -452,10 +579,9 @@ def playlist_browser_panel() -> rx.Component:
 
 def liked_songs_view_panel() -> rx.Component:
     return rx.vstack(
-        rx.button(
-            rx.text('Get genres'),
+        sub_pane_button(
+            text='See artist genres',
             on_click=State.fetch_genres_liked,
-            size='md',
             is_disabled=State.liked_tracks_have_genre,
         ),
         rx.vstack(
@@ -468,7 +594,7 @@ def liked_songs_view_panel() -> rx.Component:
                                 buttons=[track_add_seed_button(x, source='liked')]
                             )
             ),
-            rx.button('Load more', on_click=State.fetch_liked_tracks_batch),
+            sub_pane_button(text='Load more', on_click=State.fetch_liked_tracks_batch),
             width='100%'
         ),
     )

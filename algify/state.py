@@ -22,6 +22,9 @@ scopes = [
     'user-library-read',
 ]
 
+# class ParentState(rx.State):
+#     pass
+
 class State(rx.State):
     """The app state."""
     
@@ -84,10 +87,13 @@ class State(rx.State):
     def set_recc_target_instrumentalness_value(self, value: int):
         self.recc_target_instrumentalness_value = value / 100
 
+    num_recommendations: int = 10
     
     #### LIBRARY FROM API
     def fetch_rp_tracks(self):
-        raw_rp_tracks = self._sp.current_user_recently_played(limit=50)['items']
+        raw_rp_tracks = self._sp.current_user_recently_played(
+            limit=50
+        )['items']
         self.lib_tracks['____recent'] = [
             Track(item)
             for item
@@ -239,14 +245,13 @@ class State(rx.State):
     ### RECOMMENDATIONS FROM API
     def fetch_recommendations(
             self,
-            limit = 20
         ):
-        print(f'Fetching {limit} recommended tracks')
+        print(f'Fetching recommended tracks')
         
         generation_params_dict = {
             'seed_artists': self.seed_artist_uris,
             'seed_tracks': self.seed_track_uris,
-            'limit': 20,
+            'limit': self.num_recommendations,
             'target_acousticness': self.recc_target_acousticness_value \
                 if self.recc_target_acousticness_enabled else None,
             'target_energy': self.recc_target_energy_value \
@@ -277,11 +282,19 @@ class State(rx.State):
         )
 
     ### PLAYBACK STATE
-    def play_track_uri(self, track_uri: Track):
+    def play_track_uris(
+            self, 
+            track_uris: list[str],
+        ):
         print('Playing')
-        ic(track_uri, self.active_devices)
+        ic(track_uris, self.active_devices)
         if len(self.active_devices) > 0:
-            self._sp.start_playback(uris=[track_uri])
+            self._sp.start_playback(
+                uris=track_uris,
+            )
+    
+    def play_all_recommended_tracks(self):
+        self.play_track_uris(self.recc_track_uris)
 
     def queue_track_uri(self, track_uri: Track):
         print('Queueing')
@@ -302,12 +315,18 @@ class State(rx.State):
         if pl_name not in self.lib_tracks:
             self.fetch_tracks_for_playlist(self.selected_playlist)
 
-    ### SEARCH STAGING
+    ### SEARCH
+    genre_search_enabled: bool = True
+
     def stage_genre_for_search(self, genre):
         self.search_genre = genre
     
     def clear_search_genre(self):
         self.search_genre = ''
+
+    def enable_disable_genre_search(self, enabled: bool):
+        self.genre_search_enabled = enabled
+
 
     #### SEEDING
     def add_track_uri_to_seeds(self, uri: str, source: str):
@@ -395,5 +414,36 @@ class State(rx.State):
         return len(self.recc_tracks) > 0
     
     @rx.var
+    def recc_track_uris(self) -> list[str]:
+        return [track.uri for track in self.recc_tracks]
+    
+    @rx.var
     def active_devices(self) -> bool:
         return [d for d in self._sp.devices()['devices'] if d['is_active']]
+    
+class PlaylistDialogState(State):
+    show: bool = False
+    pl_name: str
+
+    def change(self):
+        self.show = not (self.show)
+
+    def clear_name(self):
+        self.pl_name = None
+
+    def create_and_dismiss(self):
+        playlist_create_results = self._sp.user_playlist_create(
+                    user=self._sp.current_user()['id'],
+                    name=self.pl_name
+                )
+        
+        self._sp.playlist_add_items(
+            playlist_id=playlist_create_results['id'],
+            items=self.recc_track_uris
+        )
+        self.change()
+        self.clear_name()
+
+    @rx.var
+    def name_invalid(self) -> bool:
+        return self.pl_name is None
