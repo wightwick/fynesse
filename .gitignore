@@ -1,8 +1,8 @@
 *.db
+*.ipynb
 *.py[cod]
+.cache
+.ipynb_checkpoints/
 .web
 __pycache__/
-*.ipynb
-.ipynb_checkpoints/
-spotify_secrets.py
-.cache
+secrets.py

@@ -1,7 +1,7 @@
 from rxconfig import config
 
 import reflex as rx
-from algify.data import Track
+from .data import Track
 from icecream import ic
 from .state import *
 from .constants import *
