@@ -470,6 +470,7 @@ class SearchState(State):
     def stage_genre_for_search(self, genre):
         self.genre_search_enabled = True
         self.search_genre = genre
+        self.fetch_search_results()
     
     def enable_genre_search(self):
         self.genre_search_enabled = True

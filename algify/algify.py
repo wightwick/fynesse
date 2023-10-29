@@ -441,7 +441,7 @@ def recommendations_view():
                 sub_pane_view(
                     rx.cond(
                         ~(State.too_few_seeds | State.too_many_seeds),
-                        hint_text('click generate'),
+                        hint_text('go on germinate em.......'),
                         rx.text('')
                     ),
                     heading='Results', 
@@ -554,7 +554,7 @@ def search_view():
                 border_color=GREEN
             ),
             sub_pane_view(
-                hint_text('search for something'),
+                hint_text('type something above'),
                    
                 heading='Results', 
             ),
