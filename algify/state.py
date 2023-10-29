@@ -450,7 +450,20 @@ class SearchState(State):
     search_name: str
     name_search_enabled: bool = False
 
+    def set_search_genre(self, genre: str):
+        self.search_genre = genre
+        self.fetch_search_results()
+
+    def set_search_year(self, year: str):
+        self.search_year = year
+        self.fetch_search_results()
+
+    def set_search_name(self, name: str):
+        self.search_name = name
+        self.fetch_search_results()
+
     num_results: int = NUM_SEARCH_RESULTS_DEFAULT
+    more_results_exist: bool
 
     results_fetched: bool = False
 
@@ -463,47 +476,73 @@ class SearchState(State):
 
     def toggle_genre_search(self, enabled: bool):
         self.genre_search_enabled = enabled
+        if enabled:
+            self.genre_query_section = f'track:"{self.search_genre}"'\
+            if len(self.search_genre) > 0\
+            else ''
+        self.fetch_search_results()
 
     def enable_name_search(self):
         self.name_search_enabled = True
 
     def toggle_name_search(self, enabled: bool):
         self.name_search_enabled = enabled
+        if enabled:
+            self.name_query_section = f'track:"{self.search_name}"'\
+            if len(self.search_name) > 0\
+            else ''
+        self.fetch_search_results()
 
     def enable_year_search(self):
         self.year_search_enabled = True
 
     def toggle_year_search(self, enabled: bool):
         self.year_search_enabled = enabled
+        if enabled:
+            self.genre_query_section = f'track:"{self.search_genre}"'\
+            if len(self.search_genre) > 0\
+            else ''
+        self.fetch_search_results()
 
-    def fetch_search_results(self):
+    def fetch_search_results(self, initial: bool = True):
         print('Fetching search results')
         query_text = self.combined_search_query
         ic(query_text)
+        query_is_valid = len(query_text) > 0
+        
+        if query_is_valid:
+            raw_tracks = self._sp.search(
+                q=self.combined_search_query,
+                type='track',
+                limit=self.num_results,
+                offset=None if initial else len(self.lib_tracks['____search'])
+            )['tracks']
+            raw_tracks_items = raw_tracks['items']
+            self.more_results_exist = bool(raw_tracks['next'])
 
-        raw_tracks = self._sp.search(
-            q=self.combined_search_query,
-            type='track',
-            limit=self.num_results
-        )['tracks']['items']
+            self.lib_tracks['____search'] = self.lib_tracks['____search'] * (not initial) +\
+                [
+                    Track(item, track_enclosed_in_item=False)
+                    for item
+                    in raw_tracks_items
+                ]
+            
+            self.results_fetched = True
 
-        self.lib_tracks['____search'] = [
-            Track(track, track_enclosed_in_item=False)
-            for track
-            in raw_tracks
-        ]
-        self.results_fetched = True
+    def fetch_more_search_results(self):
+        self.fetch_search_results(initial=False)
+
 
     @rx.var
     def combined_search_query(self) -> str:
-        name_query_section = f'track: "{self.search_name}"'\
-            if self.name_search_enabled\
+        name_query_section = f'track:"{self.search_name}"'\
+            if self.name_search_enabled and len(self.search_name) > 0\
             else ''
         genre_query_section = f' genre:"{self.search_genre}"'\
-            if self.genre_search_enabled\
+            if self.genre_search_enabled and len(self.search_genre) > 0\
             else ''
         year_query_section = f' year:{self.search_year}'\
-            if self.year_search_enabled\
+            if self.year_search_enabled and len(self.search_year) > 0\
             else ''
         
         return (
@@ -515,7 +554,7 @@ class SearchState(State):
     @rx.var
     def search_disabled(self) -> bool:
         return len(self.combined_search_query) == 0
-    
+        
     @rx.var
     def search_result_tracks(self) -> list[Track]:
         return self.lib_tracks['____search']

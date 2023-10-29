@@ -191,7 +191,7 @@ def sub_pane_view(
                 rx.heading(
                     heading,
                     size='md',
-                    margin_bottom='-13px',
+                    margin_bottom='-12.5px',
                     margin_left=2,
                     z_index=2
                 ),
@@ -246,11 +246,19 @@ def seeds_list() -> rx.Component:
         )
 
 def seeds_view() -> rx.Component:
-    return sub_pane_view(
-        content=seeds_list(),
-        heading='Seeds',
-        border_color=rx.cond(State.too_many_seeds, 'red', '')
-    )
+    return rx.cond(
+            State.too_many_seeds, 
+            sub_pane_view(
+                content=seeds_list(),
+                heading=rx.text('Seeds', color='red'),
+                border_color='red'
+            ),
+            sub_pane_view(
+                content=seeds_list(),
+                heading='Seeds',
+            )
+
+        )
 
 def switchable_param_slider(
         param_name: str,
@@ -286,7 +294,7 @@ def switchable_param_slider(
 
 def param_slider(
         text: str,
-        state_value_setter: callable,
+        on_change: callable,
         default_value: int,
         min_max: list[int]
     ):
@@ -298,7 +306,7 @@ def param_slider(
             ),
             rx.slider(
                     default_value=default_value,
-                    on_change=state_value_setter,
+                    on_change=on_change,
                     min_=min_max[0],
                     max_=min_max[1]
             ),
@@ -314,7 +322,7 @@ def playlist_create_dialog():
                 rx.hstack(
                     rx.box(
                         rx.alert_dialog_header(
-                            'Export to playlist',
+                            'Save to playlist',
                         ),
                         width='100%'
                     ),
@@ -384,7 +392,7 @@ def recommendations_view():
                     ),
                     param_slider(
                         text=f'Number of recommended tracks: {State.num_recommendations}',
-                        state_value_setter=State.set_num_recommendations,
+                        on_change=State.set_num_recommendations,
                         default_value=NUM_RECCOMENDATIONS_DEFAULT,
                         min_max=[1,100]
                     )
@@ -393,7 +401,7 @@ def recommendations_view():
                 heading='Parameters'
             ),
             pane_button(
-                text='Generate',
+                text='Germinate',
                 on_click=State.fetch_recommendations(),
                 is_disabled=State.too_many_seeds | State.too_few_seeds,
             ),
@@ -456,13 +464,16 @@ def switchable_input_field(
             name,
             margin_bottom=-3.5,
             margin_left=1,
-            opacity=rx.cond(state_enabled_var, 1, 0.5)
+            opacity=rx.cond(state_enabled_var, 1, 0.3)
         ),
         rx.hstack(
-            rx.input(
-                value=value,
-                on_change=on_change,
-                is_disabled=~state_enabled_var,
+            rx.debounce_input(
+                rx.input(
+                    value=value,
+                    on_change=on_change,
+                    is_disabled=~state_enabled_var,
+                ),
+                debounce_timeout=300
             ),
             rx.switch(
                 is_checked=state_enabled_var,
@@ -501,18 +512,13 @@ def search_view():
                     ),
                     param_slider(
                         text=f'Number of results: {SearchState.num_results}',
-                        state_value_setter=SearchState.set_num_results,
+                        on_change=SearchState.set_num_results,
                         default_value=NUM_SEARCH_RESULTS_DEFAULT,
                         min_max=[1,50]
                     )
                 ),
             ),
             heading='Parameters'
-        ),
-        pane_button(
-            text='Search', 
-            on_click=SearchState.fetch_search_results(),
-            is_disabled=SearchState.search_disabled
         ),
         rx.cond(
             SearchState.results_fetched,
@@ -541,8 +547,9 @@ def search_view():
                             ]
                         )
                     ),
+                    sub_pane_button(text='Load more', on_click=SearchState.fetch_more_search_results, is_disabled=~SearchState.more_results_exist),
                     width='100%'
-                ), 
+                ),
                 heading='Results', 
                 border_color=GREEN
             ),
@@ -581,19 +588,21 @@ def pane_view(
         rx.vstack(
             rx.heading(
                 heading_text,
-                margin_left=4,
-                margin_bottom=-4
+                margin_left='19px',
+                margin_bottom=-4,
+                z_index=2,
             ),
             rx.box(
                 content,
                 border_width='thick',
                 border_radius='3xl',
-                padding=padding
+                padding=padding,
+                z_index=1,
             ),
             align_items='left'
         ),
-        margin_left=1,
-        margin_right=1
+        margin_left=5,
+        margin_right=5
     )
     
 def sub_pane_button(
@@ -698,17 +707,30 @@ def index() -> rx.Component:
                 header_bar(),
                 rx.flex(
                     pane_view(library_view(), 'Library', padding=None),
+                    rx.spacer(),
                     pane_view(recommendations_view(), 'Recommendations'),
+                    rx.spacer(),
                     pane_view(search_view(), 'Search'),
-                    align_items='top',
                 ),
+                # rx.flex(
+                #     rx.center("Center", bg="lightblue"),
+                #     rx.spacer(),
+                #     rx.square("Square", bg="lightgreen", padding=10),
+                #     rx.spacer(),
+                #     rx.box("Box", bg="salmon", width="150px"),
+                #     width="100%",
+                # ),
+
                 rx.spacer(),
+                width='100%'
             ),
-            
+            width='100%'
     )
 
 
 # Add state and page to the app.
-app = rx.App()
+app = rx.App(stylesheets=[
+        'main.css',
+    ])
 app.add_page(index, on_load=State.on_load_library_fetch)
 app.compile()
