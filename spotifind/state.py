@@ -196,7 +196,10 @@ class State(rx.State):
         self.liked_tracks_have_genre = True
 
     def fetch_genres_selected_pl(self):
-        self._track_list_with_genres(self.selected_playlist.playlist_name)
+        self.playlist_tracks[self.selected_playlist.playlist_name] =\
+            self._track_list_with_genres(
+                self.playlist_tracks[self.selected_playlist.playlist_name]
+            )
         self.selected_playlist = self.selected_playlist.with_genre_flag_true()
         self.playlists = [
             pl if pl.playlist_name != self.selected_playlist.playlist_name else pl.with_genre_flag_true()

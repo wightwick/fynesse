@@ -1,9 +1,17 @@
 # spotifind
 
-:seedling: Advanced recommendation and search interface for spotify.
+:seedling: Advanced recommendation and search web app for Spotify, written in pure Python.
 
 :package: UI written in [Reflex](https://github.com/reflex-dev/reflex/), Spotify API calls via [Spotipy](https://github.com/spotipy-dev/spotipy)
 
+![Screenshot](screenshot.png?raw=true 'Spotifind UI')
+
+
+## Features
+
+- *Browse* your Spotify library (liked songs, playlists, recently played) and see artist genres associated with each track
+- *Fine-grained search* for artists and tracks -- by name, genre, year
+- *Generate reccomendations* based on seed tracks and artists from your library or search results + 5 tuneable parameters provided by rhe recommendation API
 
 ## Connecting to Spotify API and running the app
 
