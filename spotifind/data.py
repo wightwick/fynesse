@@ -2,6 +2,32 @@ from spotipy import SpotifyOAuth
 import reflex as rx
 from .utilities import src_set_from_images_list
 
+class Artist(rx.Base):
+    uri: str
+    artist_name: str
+    images_srcset: str
+    genres: list[str] = []
+
+    def with_genres(self, genres):
+        self.genres = genres
+        return self
+
+    def __init__(self, artist_dict):
+        uri = artist_dict['uri']
+        artist_name = artist_dict['name']
+
+        raw_images = artist_dict['images']
+
+        images = [img['url'] for img in raw_images]
+
+        images_srcset = src_set_from_images_list(raw_images)
+        
+        super().__init__(
+            uri=uri,
+            artist_name=artist_name,
+            images_srcset=images_srcset
+        )
+
 class Track(rx.Base):
     uri: str
     track_name: str

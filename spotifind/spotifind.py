@@ -132,6 +132,54 @@ def track_card(
         width='100%',
     )
 
+def artist_card_lg(
+        artist: Artist,
+        show_genres: bool=False,
+    ):
+    artist_uri_name = (artist.uri, artist.artist_name)
+
+    return rx.box(
+            rx.hstack(
+                rx.image(
+                    src_set=artist.images_srcset,
+                    html_width='100'
+                ),
+                rx.vstack(
+                    rx.box(
+                        rx.text(
+                            artist.artist_name,
+                        ),
+                        margin_top='0.5'
+                    ),                    
+                    rx.cond(
+                        (artist.genres.length() > 0) & show_genres, 
+                        rx.wrap(
+                            rx.foreach(
+                                artist.genres,
+                                #lambda x: rx.box(x, border_radius='xl', border_width='thin')
+                                lambda x: rx.wrap_item(genre_card(x))
+                            ),
+                            padding_bottom='1.5'
+                        ),
+                        rx.text('')
+                    ),
+                    align_items='left',
+                ),
+                rx.spacer(),
+                rx.button(
+                    '🌱',
+                    on_click=State.add_artist_to_seeds(artist_uri_name),
+                    is_disabled=State.seed_artist_uris.contains(artist_uri_name[0]),
+                ),
+
+        ),
+        border_width=2,
+        border_radius='lg',
+        overflow='hidden',
+        padding_right=3,
+        width='100%',
+    )
+
 def sub_pane_view(
         content: rx.Component,
         heading: str,
@@ -430,7 +478,7 @@ def search_view():
                         rx.vstack(
                             rx.foreach(
                                 SearchState.artist_results,
-                                lambda x: artist_card(x, True)
+                                lambda x: artist_card_lg(x, show_genres=True)
                             ),
                         ),
                     ),

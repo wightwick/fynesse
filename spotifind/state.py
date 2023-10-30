@@ -1,7 +1,7 @@
 import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
 from sp_secrets import *
-from .data import Track, Playlist
+from .data import Artist, Track, Playlist
 from .utilities import *
 from .constants import *
 from icecream import ic
@@ -462,7 +462,9 @@ class SearchState(State):
     search_results_type: str = SEARCH_RESULTS_TYPE_DEFAULT
 
     # a list of tuple of (URI, name) for each artist
-    artist_results: list[tuple[str, str]] = []
+    # artist_results: list[tuple[str, str]] = []
+
+    artist_results: list[Artist] = []
 
     def set_search_results_type(self, search_results_type: str):
         self.search_results_type = search_results_type
@@ -523,6 +525,30 @@ class SearchState(State):
         self.artist_search_enabled = enabled
         self.fetch_search_results()
 
+    def _fetch_genres_for_artist_list(
+            self,
+            artist_list: list[Artist]
+        ) -> list[Artist]:
+        artist_uris = [
+                a.uri
+                for a in artist_list
+            ]
+        
+        self._genre_lookup = self._update_genre_dict_from_artist_uris(
+            artist_uris,
+            self._genre_lookup,
+        )
+
+        return [
+            artist.with_genres(
+                flat_genre_list_for_artist_uris(
+                    [artist.uri],
+                    self._genre_lookup
+                )
+            )
+            for artist
+            in artist_list
+        ]
 
 
     def fetch_search_results(self, initial: bool = True):
@@ -562,9 +588,12 @@ class SearchState(State):
 
                 self.artist_results = self.artist_results * (not initial) +\
                     [
-                        (i['uri'], i['name'])
+                        Artist(i)
                         for i in raw_artist_items
                     ]
+                self.artist_results = self._fetch_genres_for_artist_list(
+                    self.artist_results
+                )
 
                 self.results_fetched = True
 
