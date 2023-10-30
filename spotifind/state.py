@@ -557,8 +557,6 @@ class SearchState(State):
                         (i['uri'], i['name'])
                         for i in raw_artist_items
                     ]
-                
-                print(self.artist_results)
 
                 self.results_fetched = True
 

@@ -342,8 +342,7 @@ def recommendations_view():
                     ),
                     heading='Results', 
                 ),
-            )
-            
+            ),
         ),
         playlist_create_dialog()
     )
@@ -365,7 +364,7 @@ def search_view():
                                 spacing="2em",
                             ),
                             on_change=SearchState.set_search_results_type,
-                            default_value=SEARCH_RESULTS_TYPE_DEFAULT,
+                            value=SearchState.search_results_type,
                             default_checked=True,
                         ),
                         width='100%',
