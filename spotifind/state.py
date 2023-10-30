@@ -442,17 +442,33 @@ class PlaylistDialogState(State):
 
 class SearchState(State):
     search_genre: str
+    search_year: str
+    search_name: str
+    search_artist: str
+
+    artist_search_enabled: bool = True
+    name_search_enabled: bool = True
+    year_search_enabled: bool = True
     genre_search_enabled: bool = True
 
-    search_year: str
-    year_search_enabled: bool = True
+    search_results_type: str = SEARCH_RESULTS_TYPE_DEFAULT
 
-    search_name: str
-    name_search_enabled: bool = True
+    # a list of tuple of (URI, name) for each artist
+    artist_results: list[tuple[str, str]] = []
 
-    search_artist: str
-    artist_search_enabled: bool = True
+    def set_search_results_type(self, search_results_type: str):
+        self.search_results_type = search_results_type
+        if self.search_results_type == 'Artists':
+            self.year_search_enabled = False
+            self.name_search_enabled = False
+        
+        #TODO: logic for remembering these enabled states from
+        # last time search type was tracks.. 
+        else:
+            self.year_search_enabled = True
+            self.name_search_enabled = True
 
+        self.fetch_search_results()
 
     def set_search_genre(self, genre: str):
         self.search_genre = genre
@@ -486,11 +502,13 @@ class SearchState(State):
         self.fetch_search_results()
 
     def toggle_name_search(self, enabled: bool):
-        self.name_search_enabled = enabled
+        if self.search_results_type == 'Tracks':
+            self.name_search_enabled = enabled
         self.fetch_search_results()
 
     def toggle_year_search(self, enabled: bool):
-        self.year_search_enabled = enabled
+        if self.search_results_type == 'Tracks':
+            self.year_search_enabled = enabled
         self.fetch_search_results()
 
     def toggle_artist_search(self, enabled: bool):
@@ -506,23 +524,45 @@ class SearchState(State):
         query_is_valid = len(query_text) > 0
         
         if query_is_valid:
-            raw_tracks = self._sp.search(
-                q=self.combined_search_query,
-                type='track',
-                limit=self.num_results,
-                offset=None if initial else len(self.lib_tracks['____search'])
-            )['tracks']
-            raw_tracks_items = raw_tracks['items']
-            self.more_results_exist = bool(raw_tracks['next'])
+            if self.search_results_type == 'Tracks':
+                raw_artists = self._sp.search(
+                    q=self.combined_search_query,
+                    type='track',
+                    limit=self.num_results,
+                    offset=None if initial else len(self.lib_tracks['____search'])
+                )['tracks']
+                raw_tracks_items = raw_artists['items']
+                self.more_results_exist = bool(raw_artists['next'])
 
-            self.lib_tracks['____search'] = self.lib_tracks['____search'] * (not initial) +\
-                [
-                    Track(item, track_enclosed_in_item=False)
-                    for item
-                    in raw_tracks_items
-                ]
-            
-            self.results_fetched = True
+                self.lib_tracks['____search'] = self.lib_tracks['____search'] * (not initial) +\
+                    [
+                        Track(item, track_enclosed_in_item=False)
+                        for item
+                        in raw_tracks_items
+                    ]
+                
+                self.results_fetched = True
+            else:
+                raw_artists = self._sp.search(
+                    q=self.combined_search_query,
+                    type='artist',
+                    limit=self.num_results,
+                    offset=None if initial else len(self.artist_results)
+                )['artists']
+                raw_artist_items = raw_artists['items']
+                self.more_results_exist = bool(raw_artists['next'])
+
+                self.artist_results = self.artist_results * (not initial) +\
+                    [
+                        (i['uri'], i['name'])
+                        for i in raw_artist_items
+                    ]
+                
+                print(self.artist_results)
+
+                self.results_fetched = True
+
+        
 
     def fetch_more_search_results(self):
         self.fetch_search_results(initial=False)

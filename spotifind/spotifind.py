@@ -353,6 +353,25 @@ def search_view():
         sub_pane_view(
             rx.box(
                 rx.vstack(
+                    rx.hstack(
+                        rx.text('Results type:'),
+                        rx.spacer(),
+                        rx.radio_group(
+                            rx.hstack(
+                                rx.foreach(
+                                    SEARCH_RESULTS_TYPE_OPTIONS,
+                                    lambda option: rx.radio(option),
+                                ),
+                                spacing="2em",
+                            ),
+                            on_change=SearchState.set_search_results_type,
+                            default_value=SEARCH_RESULTS_TYPE_DEFAULT,
+                            default_checked=True,
+                        ),
+                        width='100%',
+                        padding_left=5,
+                        padding_right=5,
+                    ),
                     switchable_input_field(
                         name='Artist',
                         value=SearchState.search_artist,
@@ -395,17 +414,26 @@ def search_view():
             SearchState.results_fetched,
             sub_pane_view(
                 rx.vstack(
-                    rx.foreach(
-                        SearchState.search_result_tracks,
-                        lambda x: track_card(
-                            track=x,
-                            show_genres=True,
-                            genres_interactive=False,
-                            artists_interactive=False,
-                            buttons=[
-                                track_multi_button(x)
-                            ]
-                        )
+                    rx.cond(
+                        SearchState.search_results_type == 'Tracks',
+                        rx.foreach(
+                            SearchState.search_result_tracks,
+                            lambda x: track_card(
+                                track=x,
+                                show_genres=True,
+                                genres_interactive=False,
+                                artists_interactive=False,
+                                buttons=[
+                                    track_multi_button(x)
+                                ]
+                            )
+                        ),
+                        rx.vstack(
+                            rx.foreach(
+                                SearchState.artist_results,
+                                lambda x: artist_card(x, True)
+                            ),
+                        ),
                     ),
                     sub_pane_button(text='Load more', on_click=SearchState.fetch_more_search_results, is_disabled=~SearchState.more_results_exist),
                     width='100%'
