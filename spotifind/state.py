@@ -39,12 +39,13 @@ class State(rx.State):
         )
     )
 
-    lib_tracks: dict[str, list[Track]] = {
-        '____recent': [],
-        '____liked': [],
-        '____search': [], 
+    playlist_tracks: dict[str, list[Track]] = {
         '': []
     }
+    recent_tracks: list[Track] = []
+    liked_tracks: list[Track] = []
+    search_tracks: list[Track] = []
+
     recc_tracks: list[Track] = []
     playlists: list[Playlist]
     rp_tracks_have_genre: bool = False
@@ -52,7 +53,7 @@ class State(rx.State):
 
     seed_track_uris_with_source: list[tuple[str, str]]
     seed_genres: list[str]
-    seed_artists: list[tuple[str, str]]
+    seed_artists_uris_names: list[tuple[str, str]]
     selected_playlist: Playlist = Playlist()
     _genre_lookup: dict[str, str] = dict()
 
@@ -99,7 +100,7 @@ class State(rx.State):
         raw_rp_tracks = self._sp.current_user_recently_played(
             limit=50
         )['items']
-        self.lib_tracks['____recent'] = [
+        self.recent_tracks = [
             Track(item)
             for item
             in raw_rp_tracks
@@ -109,10 +110,10 @@ class State(rx.State):
     def fetch_liked_tracks_batch(self):
         raw_liked_tracks = self._sp.current_user_saved_tracks(
             limit=50,
-            offset=len(self.lib_tracks['____liked'])
+            offset=len(self.liked_tracks)
         )['items']
-        self.lib_tracks['____liked'] = [
-            *self.lib_tracks['____liked'],
+        self.liked_tracks = [
+            *self.liked_tracks,
             *[Track(item) for item in raw_liked_tracks]
         ]
         self.liked_tracks_have_genre = False
@@ -180,21 +181,22 @@ class State(rx.State):
         ]
 
 
-    def _add_genres_to_lib_track_list(self, list_name: str):
-        self.lib_tracks[list_name] = self._fetch_genres_for_track_list(
-            self.lib_tracks[list_name]
+    def _track_list_with_genres(self, track_list: list[Track]) -> list[Track]:
+        track_list = self._fetch_genres_for_track_list(
+            track_list
         )
+        return track_list
 
     def fetch_genres_rp(self):
-        self._add_genres_to_lib_track_list('____recent')
+        self.recent_tracks = self._track_list_with_genres(self.recent_tracks)
         self.rp_tracks_have_genre = True
 
     def fetch_genres_liked(self):
-        self._add_genres_to_lib_track_list('____liked')
+        self.liked_tracks = self._track_list_with_genres(self.liked_tracks)
         self.liked_tracks_have_genre = True
 
     def fetch_genres_selected_pl(self):
-        self._add_genres_to_lib_track_list(self.selected_playlist.playlist_name)
+        self._track_list_with_genres(self.selected_playlist.playlist_name)
         self.selected_playlist = self.selected_playlist.with_genre_flag_true()
         self.playlists = [
             pl if pl.playlist_name != self.selected_playlist.playlist_name else pl.with_genre_flag_true()
@@ -232,7 +234,7 @@ class State(rx.State):
             pl_results = self._sp.next(pl_results)
             playlist_tracks.extend(pl_results['items'])
         
-        self.lib_tracks[playlist.playlist_name] = [
+        self.playlist_tracks[playlist.playlist_name] = [
             Track(item)
             for item in playlist_tracks
             if item['track']
@@ -317,7 +319,7 @@ class State(rx.State):
             if pl.playlist_name == pl_name
         ][0]
 
-        if pl_name not in self.lib_tracks:
+        if pl_name not in self.playlist_tracks:
             self.fetch_tracks_for_playlist(self.selected_playlist)
 
     #### SEEDING
@@ -343,26 +345,26 @@ class State(rx.State):
             if g != genre
         ]
 
-    def add_artist_to_seeds(self, artist: tuple[str, str]):
-        if artist not in self.seed_artists:
-            self.seed_artists = [*self.seed_artists, artist]
-        # print(self.seed_artists)
+    def add_artist_to_seeds(self, artist_info: tuple[str, str]):
+        if artist_info not in self.seed_artists_uris_names:
+            self.seed_artists_uris_names = [*self.seed_artists_uris_names, artist_info]
+        print(self.seed_artists_uris_names)
 
     def remove_artist_from_seeds(self, artist: tuple[str, str]):
-        self.seed_artists = [
-            a for a in self.seed_artists
+        self.seed_artists_uris_names = [
+            a for a in self.seed_artists_uris_names
             if a != artist
         ]
 
     @rx.var
     def seed_tracks(self) -> list[Track]:
-        all_tracks_flattened = [
-            item for sublist
-            in self.lib_tracks.values() 
-            for item in sublist
-        ]
+        # all_tracks_flattened = [
+        #     item for sublist
+        #     in self.playlist_tracks.values() 
+        #     for item in sublist
+        # ]
         return [
-            [t for t in all_tracks_flattened if t.uri == u][0]
+            [t for t in self.all_tracks if t.uri == u][0]
             for u in self.seed_track_uris
         ]
 
@@ -372,19 +374,25 @@ class State(rx.State):
     
     @rx.var
     def seed_artist_uris(self) -> list[str]:
-        return [uri for uri, name in self.seed_artists]
-
-    @rx.var
-    def rp_tracks(self) -> list[Track]:
-        return self.lib_tracks['____recent']
+        return [uri for uri, name in self.seed_artists_uris_names]
     
     @rx.var
-    def liked_tracks(self) -> list[Track]:
-        return self.lib_tracks['____liked']
+    def all_tracks(self) -> list[Track]:
+        playlist_tracks_flattened = [
+            item for sublist
+            in self.playlist_tracks.values() 
+            for item in sublist
+        ]
+        return [
+            *playlist_tracks_flattened,
+            *self.liked_tracks,
+            *self.recent_tracks,
+            *self.search_tracks
+        ]
 
     @rx.var
     def selected_playlist_tracks(self) -> list[Track]:
-        return self.lib_tracks[self.selected_playlist.playlist_name]
+        return self.playlist_tracks[self.selected_playlist.playlist_name]
 
     @rx.var
     def playlist_names(self) -> list[str]:
@@ -392,7 +400,7 @@ class State(rx.State):
     
     @rx.var
     def total_seeds(self) -> int:
-        return len(self.seed_artists) + len(self.seed_tracks)
+        return len(self.seed_artists_uris_names) + len(self.seed_tracks)
     @rx.var
     def too_many_seeds(self) -> bool:
         return self.total_seeds > 5
@@ -529,12 +537,12 @@ class SearchState(State):
                     q=self.combined_search_query,
                     type='track',
                     limit=self.num_results,
-                    offset=None if initial else len(self.lib_tracks['____search'])
+                    offset=None if initial else len(self.search_tracks)
                 )['tracks']
                 raw_tracks_items = raw_artists['items']
                 self.more_results_exist = bool(raw_artists['next'])
 
-                self.lib_tracks['____search'] = self.lib_tracks['____search'] * (not initial) +\
+                self.search_tracks = self.search_tracks * (not initial) +\
                     [
                         Track(item, track_enclosed_in_item=False)
                         for item
@@ -594,4 +602,4 @@ class SearchState(State):
         
     @rx.var
     def search_result_tracks(self) -> list[Track]:
-        return self.lib_tracks['____search']
+        return self.search_tracks

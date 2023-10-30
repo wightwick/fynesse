@@ -187,7 +187,7 @@ def seeds_list() -> rx.Component:
                     ),
                     rx.vstack(
                         rx.foreach(
-                            State.seed_artists,
+                            State.seed_artists_uris_names,
                             lambda x: artist_card(x, False)
                         ),
                     ),
@@ -297,7 +297,7 @@ def recommendations_view():
                 heading='Parameters'
             ),
             pane_button(
-                text='Germinate seeds',
+                text='Germinate seeds 🪴',
                 on_click=State.fetch_recommendations(),
                 is_disabled=State.too_many_seeds | State.too_few_seeds,
             ),
@@ -529,7 +529,7 @@ def recent_tracks_panel() -> rx.Component:
         ),
         rx.vstack(
             rx.foreach(
-                State.rp_tracks,
+                State.recent_tracks,
                 lambda x: track_card(
                                 track=x,
                                 show_genres=True,

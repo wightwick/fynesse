@@ -65,8 +65,6 @@ class Track(rx.Base):
 
         album_art_srcset = src_set_from_images_list(raw_album_art)
         
-        
-        
         super().__init__(
             uri=uri,
             track_name=track_name,
