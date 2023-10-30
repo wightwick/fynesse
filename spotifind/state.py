@@ -1,6 +1,6 @@
 import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
-from spotify_secrets import *
+from sp_secrets import *
 from .data import Track, Playlist
 from .utilities import *
 from .constants import *
@@ -442,13 +442,17 @@ class PlaylistDialogState(State):
 
 class SearchState(State):
     search_genre: str
-    genre_search_enabled: bool = False
+    genre_search_enabled: bool = True
 
     search_year: str
-    year_search_enabled: bool = False
+    year_search_enabled: bool = True
 
     search_name: str
-    name_search_enabled: bool = False
+    name_search_enabled: bool = True
+
+    search_artist: str
+    artist_search_enabled: bool = True
+
 
     def set_search_genre(self, genre: str):
         self.search_genre = genre
@@ -462,6 +466,11 @@ class SearchState(State):
         self.search_name = name
         self.fetch_search_results()
 
+    def set_search_artist(self, artist: str):
+        self.search_artist = artist
+        self.fetch_search_results()
+
+
     num_results: int = NUM_SEARCH_RESULTS_DEFAULT
     more_results_exist: bool
 
@@ -472,38 +481,23 @@ class SearchState(State):
         self.search_genre = genre
         self.fetch_search_results()
     
-    def enable_genre_search(self):
-        self.genre_search_enabled = True
-
     def toggle_genre_search(self, enabled: bool):
         self.genre_search_enabled = enabled
-        if enabled:
-            self.genre_query_section = f'track:"{self.search_genre}"'\
-            if len(self.search_genre) > 0\
-            else ''
         self.fetch_search_results()
-
-    def enable_name_search(self):
-        self.name_search_enabled = True
 
     def toggle_name_search(self, enabled: bool):
         self.name_search_enabled = enabled
-        if enabled:
-            self.name_query_section = f'track:"{self.search_name}"'\
-            if len(self.search_name) > 0\
-            else ''
         self.fetch_search_results()
-
-    def enable_year_search(self):
-        self.year_search_enabled = True
 
     def toggle_year_search(self, enabled: bool):
         self.year_search_enabled = enabled
-        if enabled:
-            self.genre_query_section = f'track:"{self.search_genre}"'\
-            if len(self.search_genre) > 0\
-            else ''
         self.fetch_search_results()
+
+    def toggle_artist_search(self, enabled: bool):
+        self.artist_search_enabled = enabled
+        self.fetch_search_results()
+
+
 
     def fetch_search_results(self, initial: bool = True):
         print('Fetching search results')
@@ -536,6 +530,9 @@ class SearchState(State):
 
     @rx.var
     def combined_search_query(self) -> str:
+        artist_query_section = f' artist:"{self.search_artist}"'\
+            if self.artist_search_enabled and len(self.search_artist) > 0\
+            else ''
         name_query_section = f'track:"{self.search_name}"'\
             if self.name_search_enabled and len(self.search_name) > 0\
             else ''
@@ -547,6 +544,7 @@ class SearchState(State):
             else ''
         
         return (
+            artist_query_section +
             name_query_section +
             genre_query_section +
             year_query_section

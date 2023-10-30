@@ -5,4 +5,4 @@
 .ipynb_checkpoints/
 .web
 __pycache__/
-secrets.py
+sp_secrets.py

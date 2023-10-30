@@ -18,3 +18,6 @@ def src_set_from_images_list(images_list: list[dict[str, str]]) -> str:
             f"{img['url']} {img['width']}w"
             for img in images_list
         ])
+
+def dummy():
+    pass
