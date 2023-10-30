@@ -9,9 +9,9 @@
 
 ## Features
 
-- *Browse* your Spotify library (liked songs, playlists, recently played) and see artist genres associated with each track
-- *Fine-grained search* for artists and tracks -- by name, genre, year
-- *Generate reccomendations* based on seed tracks and artists from your library or search results + 5 tuneable parameters provided by rhe recommendation API
+- **Browse** your Spotify library (liked songs, playlists, recently played) and see artist genres associated with each track
+- **Fine-grained search** for artists and tracks — by name, genre, year
+- **Generate reccomendations** based on seed tracks and artists from your library or search results + 5 tuneable parameters provided by rhe recommendation API
 
 ## Connecting to Spotify API and running the app
 
