@@ -100,7 +100,12 @@ def param_slider(
 
 def track_queue_button(track: Track) -> rx.Component:
     return rx.button(
-        rx.icon(tag='plus_square'),
+        rx.vstack(
+            rx.icon(tag='small_add'),
+            rx.icon(tag='hamburger'),
+            spacing='-1'
+        ),
+        # rx.icon(tag='plus_square'),
         on_click=State.queue_track_uri(track.uri),
      )
 

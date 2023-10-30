@@ -2,7 +2,16 @@ from rxconfig import config
 
 import reflex as rx
 
-from spotifind.input import param_slider, switchable_input_field, switchable_param_slider, track_add_seed_button, track_multi_button, track_play_button, track_queue_button, track_remove_seed_button
+from spotifind.input import (
+    param_slider,
+    switchable_input_field,
+    switchable_param_slider,
+    track_add_seed_button,
+    track_multi_button,
+    track_play_button,
+    track_queue_button,
+    track_remove_seed_button
+)
 from .data import Track
 from .state import *
 from .constants import *
@@ -76,7 +85,8 @@ def track_card(
             rx.hstack(
                 rx.image(
                     src_set=track.album_art_srcset,
-                    html_width='100'
+                    html_width='100',
+                    border_radius='md',
                 ),
                 rx.vstack(
                     rx.box(
@@ -142,7 +152,8 @@ def artist_card_lg(
             rx.hstack(
                 rx.image(
                     src_set=artist.images_srcset,
-                    html_width='100'
+                    html_width='100',
+                    border_radius='md'
                 ),
                 rx.vstack(
                     rx.box(
@@ -385,7 +396,7 @@ def recommendations_view():
                 sub_pane_view(
                     rx.cond(
                         ~(State.too_few_seeds | State.too_many_seeds),
-                        hint_text('go on germinate em.......'),
+                        hint_text('germinate seeds to produce recommendations'),
                         rx.text('')
                     ),
                     heading='Results', 
@@ -416,7 +427,7 @@ def search_view():
                             default_checked=True,
                         ),
                         width='100%',
-                        padding_left=5,
+                        padding_left=1,
                         padding_right=5,
                     ),
                     switchable_input_field(
