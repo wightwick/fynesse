@@ -1,4 +1,4 @@
-#:mag: Spotifind
+# :mag: Spotifind
 
 :seedling: Advanced recommendation and search web app for Spotify, written in pure Python.
 
