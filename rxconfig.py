@@ -1,5 +1,5 @@
 import reflex as rx
 
 config = rx.Config(
-    app_name="spotifind",
+    app_name="fynesse",
 )

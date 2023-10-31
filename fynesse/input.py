@@ -1,5 +1,5 @@
-from spotifind.data import Track
-from spotifind.state import State
+from .data import Track
+from .state import State
 
 import reflex as rx
 

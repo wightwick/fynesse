@@ -1,10 +1,10 @@
-# :mag: Spotifind
+# :mag: Fynesse
 
 :seedling: Advanced recommendation and search web app for Spotify, written in pure Python.
 
 :package: UI written in [Reflex](https://github.com/reflex-dev/reflex/), Spotify interaction via [Spotipy](https://github.com/spotipy-dev/spotipy)
 
-![Screenshot](screenshot.png?raw=true 'Spotifind UI')
+![Screenshot](screenshot.png?raw=true 'fynesse UI')
 
 
 ## Features
@@ -16,7 +16,7 @@
 
 ## Connecting to Spotify API and running the app
 
-The core functionality of spotifind requires a connection to Spotify's web API.
+The core functionality of fynesse requires a connection to Spotify's web API.
 
 To set this up:
 1. Go to the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications)
@@ -40,7 +40,7 @@ To set this up:
 - experiment with the other generation parameters to fine tune your recommendations
 - play/queue some/all of the recommended tunes
     - music is played via your active spotify device if you have one
-    - **to play music from spotifind, you need to have a spotify client open somewhere - desktop, web, or mobile**
+    - **to play music from fynesse, you need to have a spotify client open somewhere - desktop, web, or mobile**
 - save reccommended tunes to a playlist in your library to listen another time
 - explore genres by showing them on your library and clicking to search
     - narrow down search to find similar tunes manually
