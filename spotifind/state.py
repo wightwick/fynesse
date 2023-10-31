@@ -1,37 +1,17 @@
 import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
 from sp_secrets import *
-from .data import Artist, Track, Playlist
+from .data import *
 from .utilities import *
 from .constants import *
 from icecream import ic
-
-scopes = [
-    'user-read-playback-state',
-    'user-modify-playback-state',
-    'user-read-currently-playing',
-    'app-remote-control',
-    'streaming',
-    'playlist-read-private',
-    'playlist-read-collaborative',
-    'playlist-modify-private',
-    'playlist-modify-public',
-    'user-read-playback-position',
-    'user-top-read',
-    'user-read-recently-played',
-    'user-library-modify',
-    'user-library-read',
-]
-
-# class ParentState(rx.State):
-#     pass
 
 class State(rx.State):
     """The app state."""
     
     _sp = Spotify(
         auth_manager=SpotifyOAuth(
-            scope=scopes,
+            scope=SPOTIFY_API_SCOPES,
             client_id=SPOTIPY_CLIENT_ID,
             client_secret=SPOTIPY_CLIENT_SECRET,
             redirect_uri=SPOTIPY_REDIRECT_URI,
@@ -44,12 +24,14 @@ class State(rx.State):
     }
     recent_tracks: list[Track] = []
     liked_tracks: list[Track] = []
+    top_tracks: list[Track] = []
     search_tracks: list[Track] = []
 
     recc_tracks: list[Track] = []
     playlists: list[Playlist]
-    rp_tracks_have_genre: bool = False
+    recent_tracks_have_genre: bool = False
     liked_tracks_have_genre: bool = False
+    top_tracks_have_genre: bool = False
 
     seed_track_uris_with_source: list[tuple[str, str]]
     seed_genres: list[str]
@@ -96,7 +78,46 @@ class State(rx.State):
     num_recommendations: int = NUM_RECCOMENDATIONS_DEFAULT
     
     #### LIBRARY FROM API
-    def fetch_rp_tracks(self):
+    def fetch_playlists(self):
+        print("Fetching playlist info")
+
+        pl_results = self._sp.current_user_playlists()
+        pl_items = pl_results['items']
+        while pl_results['next']:
+            pl_results = self._sp.next(pl_results)
+            pl_items.extend(pl_results['items'])
+
+        self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
+
+        # ensure uniqueness of names
+        playlist_counts = {}
+        for playlist in self.playlists:
+            name = playlist.playlist_name
+            if name in playlist_counts:
+                playlist_counts[name] += 1
+                playlist.playlist_name = f"{name} ({playlist_counts[name]})"
+            else:
+                playlist_counts[name] = 1        
+
+    def fetch_tracks_for_playlist(self, playlist: Playlist):
+        print("Fetching playlist tracks for PL", playlist.playlist_name)
+
+        pl_results = self._sp.playlist_items(playlist.uri)
+        playlist_tracks = pl_results['items']
+        while pl_results['next']:
+            pl_results = self._sp.next(pl_results)
+            playlist_tracks.extend(pl_results['items'])
+        
+        self.playlist_tracks[playlist.playlist_name] = [
+            Track(item)
+            for item in playlist_tracks
+            if item['track']
+            and 'spotify:local' not in item['track']['uri']
+        ]
+
+
+    def fetch_recent_tracks(self):
+        print('Fetching recent tracks')
         raw_rp_tracks = self._sp.current_user_recently_played(
             limit=50
         )['items']
@@ -105,9 +126,11 @@ class State(rx.State):
             for item
             in raw_rp_tracks
         ]
-        self.rp_tracks_have_genre = False
+        self.top_tracks_have_genre = False
+    
 
     def fetch_liked_tracks_batch(self):
+        print('Fetching a batch of liked tracks')
         raw_liked_tracks = self._sp.current_user_saved_tracks(
             limit=50,
             offset=len(self.liked_tracks)
@@ -117,6 +140,19 @@ class State(rx.State):
             *[Track(item) for item in raw_liked_tracks]
         ]
         self.liked_tracks_have_genre = False
+
+    def fetch_top_tracks(self):
+        print('Fetching top tracks')
+        raw_top_tracks = self._sp.current_user_top_tracks(limit=50)['items']
+
+        self.top_tracks = [
+            Track(item, track_enclosed_in_item=False)
+            for item
+            in raw_top_tracks
+        ]
+        ic(raw_top_tracks)
+        self.top_tracks_have_genre = False
+
 
     def _update_genre_dict_from_artist_uris(
         self,
@@ -187,13 +223,18 @@ class State(rx.State):
         )
         return track_list
 
-    def fetch_genres_rp(self):
+    def fetch_genres_recent_tracks(self):
         self.recent_tracks = self._track_list_with_genres(self.recent_tracks)
-        self.rp_tracks_have_genre = True
+        self.recent_tracks_have_genre = True
 
     def fetch_genres_liked(self):
         self.liked_tracks = self._track_list_with_genres(self.liked_tracks)
         self.liked_tracks_have_genre = True
+
+    def fetch_genres_top_tracks(self):
+        self.top_tracks = self._track_list_with_genres(self.top_tracks)
+        self.top_tracks_have_genre = True
+
 
     def fetch_genres_selected_pl(self):
         self.playlist_tracks[self.selected_playlist.playlist_name] =\
@@ -207,49 +248,15 @@ class State(rx.State):
             in self.playlists
         ]
 
-    def fetch_playlists(self):
-        print("Fetching playlist info")
-
-        pl_results = self._sp.current_user_playlists()
-        pl_items = pl_results['items']
-        while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
-            pl_items.extend(pl_results['items'])
-
-        self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
-
-        # ensure uniqueness of names
-        playlist_counts = {}
-        for playlist in self.playlists:
-            name = playlist.playlist_name
-            if name in playlist_counts:
-                playlist_counts[name] += 1
-                playlist.playlist_name = f"{name} ({playlist_counts[name]})"
-            else:
-                playlist_counts[name] = 1        
-
-    def fetch_tracks_for_playlist(self, playlist: Playlist):
-        print("Fetching playlist tracks for PL", playlist.playlist_name)
-
-        pl_results = self._sp.playlist_items(playlist.uri)
-        playlist_tracks = pl_results['items']
-        while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
-            playlist_tracks.extend(pl_results['items'])
-        
-        self.playlist_tracks[playlist.playlist_name] = [
-            Track(item)
-            for item in playlist_tracks
-            if item['track']
-            and 'spotify:local' not in item['track']['uri']
-        ]
 
     def on_load_library_fetch(self):
-        self.fetch_rp_tracks()
+        self.fetch_recent_tracks()
         self.fetch_liked_tracks_batch()
         self.fetch_playlists()
         self.selected_playlist = self.playlists[0]
         self.fetch_tracks_for_playlist(self.selected_playlist)
+        self.fetch_top_tracks()
+
 
 
     ### RECOMMENDATIONS FROM API
