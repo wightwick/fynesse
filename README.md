@@ -1,4 +1,4 @@
-# :mag: Fynesse
+# :control_knobs: Fynesse
 
 :seedling: Advanced recommendation and search web app for Spotify, written in pure Python.
 
