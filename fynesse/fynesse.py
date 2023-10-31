@@ -74,7 +74,7 @@ def header_bar() -> rx.Component:
             padding_right=2,
             align='center'
         ),
-        margin_bottom=20,
+        margin_bottom=10,
     )
     
 
@@ -507,7 +507,7 @@ def search_view():
             sub_pane_view(
                 rx.vstack(
                     rx.cond(
-                        SearchState.search_results_type == SEARCH_RESULTS_TYPE_DEFAULT,
+                        SearchState.search_results_type == SEARCH_RESULTS_TYPE_TRACKS,
                         rx.foreach(
                             SearchState.search_result_tracks,
                             lambda x: track_card(

@@ -26,6 +26,8 @@ class State(rx.State):
     liked_tracks: list[Track] = []
     top_tracks: list[Track] = []
     search_tracks: list[Track] = []
+    search_tracks_including_prev: list[Track] = []
+
 
     recc_tracks: list[Track] = []
     playlists: list[Playlist]
@@ -396,7 +398,8 @@ class State(rx.State):
             *playlist_tracks_flattened,
             *self.liked_tracks,
             *self.recent_tracks,
-            *self.search_tracks
+            *self.search_tracks_including_prev,
+            *self.top_tracks
         ]
 
     @rx.var
@@ -468,7 +471,7 @@ class SearchState(State):
     year_search_enabled: bool = True
     genre_search_enabled: bool = True
 
-    search_results_type: str = SEARCH_RESULTS_TYPE_DEFAULT
+    search_results_type: str = SEARCH_RESULTS_TYPE_TRACKS
 
     # a list of tuple of (URI, name) for each artist
     # artist_results: list[tuple[str, str]] = []
@@ -521,12 +524,12 @@ class SearchState(State):
         self.fetch_search_results()
 
     def toggle_name_search(self, enabled: bool):
-        if self.search_results_type == 'Tracks':
+        if self.search_results_type == SEARCH_RESULTS_TYPE_TRACKS:
             self.name_search_enabled = enabled
         self.fetch_search_results()
 
     def toggle_year_search(self, enabled: bool):
-        if self.search_results_type == 'Tracks':
+        if self.search_results_type == SEARCH_RESULTS_TYPE_TRACKS:
             self.year_search_enabled = enabled
         self.fetch_search_results()
 
@@ -567,7 +570,7 @@ class SearchState(State):
         query_is_valid = len(query_text) > 0
         
         if query_is_valid:
-            if self.search_results_type == 'Tracks':
+            if self.search_results_type == SEARCH_RESULTS_TYPE_TRACKS:
                 raw_artists = self._sp.search(
                     q=self.combined_search_query,
                     type='track',
@@ -577,12 +580,18 @@ class SearchState(State):
                 raw_tracks_items = raw_artists['items']
                 self.more_results_exist = bool(raw_artists['next'])
 
-                self.search_tracks = self.search_tracks * (not initial) +\
-                    [
-                        Track(item, track_enclosed_in_item=False)
-                        for item
-                        in raw_tracks_items
-                    ]
+                search_tracks = [
+                            Track(item, track_enclosed_in_item=False)
+                            for item
+                            in raw_tracks_items
+                        ]
+
+                if initial:
+                    self.search_tracks_including_prev = self.search_tracks_including_prev + search_tracks
+                    self.search_tracks = search_tracks
+                else:
+                    self.search_tracks = self.search_tracks + search_tracks
+                    
                 
                 self.results_fetched = True
             else:
