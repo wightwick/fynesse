@@ -1,3 +1,4 @@
+from fynesse.constants import APP_NAME
 from rxconfig import config
 
 import reflex as rx
@@ -56,11 +57,26 @@ def genre_card(genre: str):
 
 def header_bar() -> rx.Component:
     return rx.center(
-        rx.heading(''),
-        size='5xl',
-        margin_bottom='10',
-        width='100%',
+        rx.flex(
+            rx.heading(
+                APP_NAME,
+                size='3xl'
+            ),
+            rx.spacer(),
+            rx.button(
+                rx.icon(tag="moon"),
+                on_click=rx.toggle_color_mode,
+                size='sm',
+                variant='ghost'
+            ),
+            width='100vw',
+            padding_left=2,
+            padding_right=2,
+            align='center'
+        ),
+        margin_bottom=20,
     )
+    
 
 def artist_card(
         artist_uri_name: tuple[str, str],
@@ -697,19 +713,20 @@ def index() -> rx.Component:
             rx.vstack(
                 header_bar(),
                 rx.flex(
+                    rx.spacer(),
                     pane_view(library_view(), LIBRARY_PANE_HEADER_TEXT, padding=None),
                     rx.spacer(),
                     pane_view(recommendations_view(), RECOMMENDATIONS_PANE_HEADER_TEXT),
                     rx.spacer(),
                     pane_view(search_view(), SEARCH_PANE_HEADER_TEXT),
+                    rx.spacer(),
+                    width='100vw'
                 ),
+                # width='100vw'
 
-                rx.spacer(),
-                width='100%'
             ),
-            width='100%'
+            # width='100vw'
     )
-
 
 # Add state and page to the app.
 app = rx.App()

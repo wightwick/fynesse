@@ -150,7 +150,6 @@ class State(rx.State):
             for item
             in raw_top_tracks
         ]
-        ic(raw_top_tracks)
         self.top_tracks_have_genre = False
 
 
