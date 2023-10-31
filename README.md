@@ -20,18 +20,20 @@ The core functionality of spotifind requires a connection to Spotify's web API.
 
 To set this up:
 1. Go to the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications)
-1. Click `Create an app`
+1. Click `Create app`
+1. Enter a name and app description (these don't matter)
+1. Enter `https://localhost:1234` as Redirect URI (or a port of your choice)
+1. Tick `Web API` under `Which API/SDKs are you planning to use?`
+1. Agree to terms and click `Save`
+1. Click `Settings` in the top right
     - You now can see your `Client ID` and `Client Secret`
-1. Click `Edit Settings`
-1. Add `https://localhost:1234` to the Redirect URIs (or a port of your choice)
-1. Scroll down and click `Save`
 1. Add your `Client ID` and `Client Secret` to [sp_secrets.py](sp_secrets.py)
 1. You are now ready to run the app. Do so by running `reflex init` followed by `reflex run` in the [parent directory](/)
-1. On first run, a browser window will open to a spotify authentication page. When you accept, you will be redirected to a URL beginning `https://localhost:1234` (if you kept default port)
-1. The terminal session in which reflex is running will prompt you to `Enter the URL you were redirected to`; copy-paste the redirect url from your browser's address bar into the terminal and press enter.
-1. The app should run, accessible at `http://localhost:3000`
+1. On first run, a browser window will open to a spotify authentication page. When you click `Agree`, you will be redirected to a URL beginning `https://localhost:1234` (if you kept default port)
+1. The terminal session in which reflex is running will prompt you to `Enter the URL you were redirected to`; copy-paste the redirect url from your browser's address bar into the terminal and press enter
+1. The app should run, accessible at `http://localhost:3000` :sunglass:
 
-#Tips for use
+## Tips for use
 - have a flick through your library for some bangers
 - plant them and/or their artists into the seeds window
 - germinate the seeds to produce a batch of tune reccomendations
