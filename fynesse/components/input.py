@@ -1,9 +1,10 @@
 
 """
-Reusable input components
+Reusable input components: 
+Buttons, sliders, fields
 """
 from ..data import Track
-from ..state import State, rx
+from ..state import State
 
 import reflex as rx
 

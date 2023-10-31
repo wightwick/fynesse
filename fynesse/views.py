@@ -1,5 +1,5 @@
 """
-Components for displaying specific information
+Components that display specific information
 """
 from fynesse.components.display import *
 from fynesse.components.input import *

@@ -2,7 +2,7 @@
 Generic components for displaying information
 """
 from fynesse.data import Track
-from fynesse.state import Artist, SearchState, State, Track, rx
+from fynesse.state import Artist, SearchState, State, Track
 
 import reflex as rx
 

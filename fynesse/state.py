@@ -1,3 +1,6 @@
+"""
+State classes
+"""
 import reflex as rx
 from spotipy import Spotify, SpotifyOAuth
 from sp_secrets import *
@@ -7,7 +10,9 @@ from .constants import *
 from icecream import ic
 
 class State(rx.State):
-    """The app state."""
+    """The app's base state;
+    contains logic around track data, recommendations, and playback
+    """
     
     _sp = Spotify(
         auth_manager=SpotifyOAuth(
@@ -434,6 +439,7 @@ class State(rx.State):
         return [d for d in self._sp.devices()['devices'] if d['is_active']]
     
 class PlaylistDialogState(State):
+    """State specific to the playlist creation dialogue"""
     show: bool = False
     pl_name: str
 
@@ -461,6 +467,7 @@ class PlaylistDialogState(State):
         return self.pl_name is None
 
 class SearchState(State):
+    """State specific to the search functionality"""
     search_genre: str
     search_year: str
     search_name: str

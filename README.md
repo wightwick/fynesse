@@ -41,7 +41,7 @@ To set this up:
 - experiment with the other generation parameters to fine tune your recommendations
 - play/queue some/all of the recommended tunes
     - music is played via your active spotify device if you have one
-    - **to play music from fynesse, you need to have a spotify client open somewhere - desktop, web, or mobile**
+    - **to play music from fynesse, you need to have a spotify client open somewhere - desktop, web, or mobile, and Spotify must consider it the 'active device'. To make a device active you can quickly play/pause from it**
 - save recommended tunes to a playlist in your library to listen another time
 - explore genres by showing them on your library and clicking to search
     - narrow down search to find similar tunes manually
