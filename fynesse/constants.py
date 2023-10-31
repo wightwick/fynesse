@@ -1,9 +1,13 @@
+"""
+Constants used throughout UI; in once place for easier modification
+"""
 NUM_RECCOMENDATIONS_DEFAULT = 10
 NUM_SEARCH_RESULTS_DEFAULT = 10
 
 SEARCH_RESULTS_TYPE_OPTIONS = ['tracks', 'artists']
 SEARCH_RESULTS_TYPE_TRACKS = 'tracks'
 SEARCH_RESULTS_TYPE_ARTISTS = 'artists'
+
 
 SUB_PANE_WARNING_RED = 'rgb(235,104,91)'
 SPOTIFY_API_SCOPES = [
@@ -66,3 +70,4 @@ SEARCH_GENRE_FIELD_TEXT = 'genre'
 SEARCH_YEAR_FIELD_TEXT = 'year'
 NUM_SEARCH_RESULTS_SLIDER_TEXT = 'number of results: '
 
+SPOTIFY_GREEN = '#1DB954'

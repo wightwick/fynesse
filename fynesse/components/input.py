@@ -1,8 +1,11 @@
-from .data import Track
-from .state import State
+
+"""
+Reusable input components
+"""
+from ..data import Track
+from ..state import State, rx
 
 import reflex as rx
-
 
 def switchable_input_field(
         name: str,
@@ -155,4 +158,32 @@ def track_remove_seed_button(track: Track) -> rx.Component:
     return rx.button(
         rx.icon(tag="minus"),
         on_click=State.remove_track_uri_from_seeds(track.uri),
+    )
+
+
+def pane_button(
+        text: str,
+        on_click: callable,
+        is_disabled: bool = False
+):
+    return rx.button(
+        text,
+        on_click=on_click,
+        is_disabled=is_disabled,
+        width='100%',
+        border_radius='xl'
+    )
+
+
+def sub_pane_button(
+        text: str,
+        on_click: callable,
+        is_disabled: bool = False
+    ):
+    return rx.button(
+        rx.text(text),
+        on_click=on_click,
+        size='md',
+        is_disabled=is_disabled,
+        width='100%'
     )
