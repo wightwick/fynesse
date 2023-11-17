@@ -240,10 +240,8 @@ class State(rx.State):
             limit=50,
             offset=len(self.liked_tracks)
         )['items']
-        self.liked_tracks = [
-            *self.liked_tracks,
-            *[Track(item) for item in raw_liked_tracks]
-        ]
+        self.liked_tracks = self.liked_tracks + [Track(item) for item in raw_liked_tracks]
+        
         self.liked_tracks_have_genre = False
 
     def fetch_top_tracks(self):
@@ -447,7 +445,7 @@ class State(rx.State):
     #### SEEDING
     def add_track_uri_to_seeds(self, uri: str, source: str):
         if uri not in [uri for uri, source in self.seed_track_uris_with_source]:
-            self.seed_track_uris_with_source = [*self.seed_track_uris_with_source, (uri, source)]
+            self.seed_track_uris_with_source = self.seed_track_uris_with_source + [(uri, source)]
 
     def remove_track_uri_from_seeds(self, uri: str):
         self.seed_track_uris_with_source = [
@@ -455,16 +453,6 @@ class State(rx.State):
             for u, s
             in self.seed_track_uris_with_source
             if u != uri
-        ]
-
-    def add_genre_to_seeds(self, genre: str):
-        if genre not in self.seed_genres:
-            self.seed_genres = [*self.seed_genres, genre]
-
-    def remove_genre_from_seeds(self, genre: str):
-        self.seed_genres = [
-            g for g in self.seed_genres
-            if g != genre
         ]
 
     def add_artist_to_seeds(self, artist_info: list[str]):
