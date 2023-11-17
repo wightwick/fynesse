@@ -14,9 +14,9 @@ def index() -> rx.Component:
             rx.vstack(
                 rx.box(
                     rx.cond(
-                        ~State.app_is_authenticated,
+                        State.app_is_authenticated,
+                        rx.box(on_mount=rx.redirect('/')), # clear url after auth
                         authenticate_alert(),
-                        rx.box()
                     ),
                     width='60vw'
                 ),
@@ -34,7 +34,6 @@ def index() -> rx.Component:
                     ),
                     opacity=rx.cond(State.app_is_authenticated, 1, 0.3)
                 ),
-                
             )
     )
 

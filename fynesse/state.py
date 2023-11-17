@@ -366,7 +366,6 @@ class State(rx.State):
         if not self.app_is_authenticated:
             if self.callback_code_and_state != (None, None):
                 self.get_auth_token_from_callback()
-
                 self.initial_library_fetch()
 
         else:

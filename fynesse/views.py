@@ -420,7 +420,10 @@ def header_bar() -> rx.Component:
             ),
             rx.spacer(),
             rx.button(
-                rx.icon(tag="moon"),
+                rx.color_mode_cond(
+                    light=rx.icon(tag="moon"),
+                    dark=rx.icon(tag="sun"),
+                ),
                 on_click=rx.toggle_color_mode,
                 size='sm',
                 variant='ghost'
@@ -444,7 +447,7 @@ def authenticate_alert() -> rx.Component:
                     AUTHENTICATE_BUTTON_TEXT,
                     on_click=rx.redirect(
                         State.spotify_auth_url,
-                        external=True,
+                        external=False,
                     ),
                 ),
             ),
