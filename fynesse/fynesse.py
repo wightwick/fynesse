@@ -27,6 +27,12 @@ def index() -> rx.Component:
             ),
     )
 
+@rx.page(route='/sp_redirect')
+def post():
+    return rx.center(
+        rx.text(State.redirect_uri_code)
+    )
+
 app = rx.App()
 app.add_page(index, on_load=State.on_load_library_fetch)
 app.compile()

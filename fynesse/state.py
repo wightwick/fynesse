@@ -14,6 +14,13 @@ class State(rx.State):
     contains logic around track data, recommendations, and playback
     """
     
+    @rx.var
+    def redirect_uri_code(self) -> str:
+        args = self.router.page.params
+        code = args.get('code', [])
+        return code
+
+
     _sp = Spotify(
         auth_manager=SpotifyOAuth(
             scope=SPOTIFY_API_SCOPES,
@@ -256,6 +263,7 @@ class State(rx.State):
 
 
     def on_load_library_fetch(self):
+        print(self.redirect_uri_code)
         self.fetch_recent_tracks()
         self.fetch_liked_tracks_batch()
         self.fetch_playlists()
