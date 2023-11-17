@@ -432,3 +432,24 @@ def header_bar() -> rx.Component:
         ),
         margin_bottom=10,
     )
+
+def authenticate_alert() -> rx.Component:
+    return rx.alert(
+        rx.alert_icon(),
+        rx.alert_title(AUTHENTICATE_DIALOG_HEADER_TEXT, width='100%'),
+        rx.alert_description(
+            rx.hstack(
+                rx.spacer(),
+                rx.button(
+                    AUTHENTICATE_BUTTON_TEXT,
+                    on_click=rx.redirect(
+                        State.spotify_auth_url,
+                        external=True,
+                    ),
+                ),
+            ),
+            width='100%'
+        ),
+        status='error',
+        border_radius='lg'
+    )

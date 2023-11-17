@@ -21,7 +21,8 @@ def switchable_input_field(
             name,
             margin_bottom=-3.5,
             margin_left=1,
-            opacity=rx.cond(state_enabled_var, 1, 0.3)
+            opacity=rx.cond(state_enabled_var, 1, 0.3),
+            z_index=2,
         ),
         rx.hstack(
             rx.debounce_input(
@@ -36,7 +37,8 @@ def switchable_input_field(
                 is_checked=state_enabled_var,
                 on_change=state_toggle_fn,
                 color_scheme='green'
-            )
+            ),
+            z_index=1
         ),
         align_items='left',
         width='100%'

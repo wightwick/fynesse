@@ -2,7 +2,7 @@
 State classes
 """
 import reflex as rx
-from spotipy import Spotify, SpotifyOAuth
+from spotipy import Spotify
 from sp_secrets import *
 from .data import *
 from .utilities import *
@@ -39,9 +39,9 @@ class State(rx.State):
 
         params = {
             'response_type': 'code',
-            'client_id': SPOTIPY_CLIENT_ID,
+            'client_id': SPOTIFY_CLIENT_ID,
             'scope': scope,
-            'redirect_uri': SPOTIPY_REDIRECT_URI,
+            'redirect_uri': SPOTIFY_REDIRECT_URI,
             'state': self.code_req_state
         }
 
@@ -57,13 +57,13 @@ class State(rx.State):
                 'url': 'https://accounts.spotify.com/api/token',
                 'data': {
                     'code': code,
-                    'redirect_uri': SPOTIPY_REDIRECT_URI,
+                    'redirect_uri': SPOTIFY_REDIRECT_URI,
                     'grant_type': 'authorization_code'
                 },
                 'headers': {
                     'content-type': 'application/x-www-form-urlencoded',
                     'Authorization': 'Basic ' + base64.b64encode((
-                        SPOTIPY_CLIENT_ID + ':' + SPOTIPY_CLIENT_SECRET
+                        SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET
                     ).encode()).decode('utf-8')
                 }
             }
@@ -90,7 +90,7 @@ class State(rx.State):
                 'headers': {
                     'content-type': 'application/x-www-form-urlencoded',
                     'Authorization': 'Basic ' + base64.b64encode((
-                        SPOTIPY_CLIENT_ID + ':' + SPOTIPY_CLIENT_SECRET
+                        SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET
                     ).encode()).decode('utf-8')
                 }
             }

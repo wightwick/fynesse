@@ -12,36 +12,30 @@ from .constants import *
 def index() -> rx.Component:
     return rx.container(
             rx.vstack(
-                rx.cond(
-                    ~State.app_is_authenticated,
-                    rx.alert(
-                        rx.alert_icon(),
-                        rx.alert_title(AUTHENTICATE_DIALOG_HEADER_TEXT),
-                        rx.alert_description(
-                            rx.button(
-                                AUTHENTICATE_BUTTON_TEXT,
-                                on_click=rx.redirect(
-                                    State.spotify_auth_url,
-                                    external=True,
-                                ),
-                            ),
-                        ),
-                        status='error',
+                rx.box(
+                    rx.cond(
+                        ~State.app_is_authenticated,
+                        authenticate_alert(),
+                        rx.box()
                     ),
-                    rx.box()
+                    width='60vw'
                 ),
-                header_bar(),
-                rx.flex(
-                    rx.spacer(),
-                    pane(library_view(), LIBRARY_PANE_HEADER_TEXT, padding=None),
-                    rx.spacer(),
-                    pane(recommendations_view(), RECOMMENDATIONS_PANE_HEADER_TEXT),
-                    rx.spacer(),
-                    pane(search_view(), SEARCH_PANE_HEADER_TEXT),
-                    rx.spacer(),
-                    width='100vw'
+                rx.vstack(
+                    header_bar(),
+                    rx.flex(
+                        rx.spacer(),
+                        pane(library_view(), LIBRARY_PANE_HEADER_TEXT, padding=None),
+                        rx.spacer(),
+                        pane(recommendations_view(), RECOMMENDATIONS_PANE_HEADER_TEXT),
+                        rx.spacer(),
+                        pane(search_view(), SEARCH_PANE_HEADER_TEXT),
+                        rx.spacer(),
+                        width='100vw'
+                    ),
+                    opacity=rx.cond(State.app_is_authenticated, 1, 0.3)
                 ),
-            ),
+                
+            )
     )
 
 @rx.page(route='/sp_redirect')
