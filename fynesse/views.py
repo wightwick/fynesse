@@ -418,9 +418,17 @@ def recommendations_view():
 def header_bar() -> rx.Component:
     return rx.center(
         rx.flex(
-            rx.heading(
-                APP_NAME,
-                size='3xl'
+            rx.hstack(
+                rx.heading(
+                    'fy',
+                    size='3xl',
+                    color=SPOTIFY_GREEN
+                ),
+                rx.heading(
+                    'nesse',
+                    size='3xl'
+                ),
+                spacing='0'
             ),
             rx.spacer(),
             rx.button(
