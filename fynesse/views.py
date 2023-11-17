@@ -433,16 +433,22 @@ def header_bar() -> rx.Component:
             rx.spacer(),
             rx.button(
                 rx.color_mode_cond(
-                    light=rx.icon(tag="moon"),
-                    dark=rx.icon(tag="sun"),
+                    light=rx.hstack(
+                        rx.text('dark'),
+                        rx.icon(tag='moon')
+                    ),
+                    dark=rx.hstack(
+                        rx.text('light'),
+                        rx.icon(tag='sun')
+                    ),
                 ),
                 on_click=rx.toggle_color_mode,
                 size='sm',
-                variant='ghost'
+                # variant='ghost'
             ),
             width='100vw',
-            padding_left=2,
-            padding_right=2,
+            padding_left=4,
+            padding_right=4,
             align='center'
         ),
         margin_bottom=10,
