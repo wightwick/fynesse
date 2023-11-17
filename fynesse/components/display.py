@@ -68,7 +68,7 @@ def track_card(
                 rx.image(
                     src_set=track.album_art_srcset,
                     html_width='100',
-                    border_radius='md',
+                    padding=1.5
                 ),
                 rx.vstack(
                     rx.box(
