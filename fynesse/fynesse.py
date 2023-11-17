@@ -12,6 +12,24 @@ from .constants import *
 def index() -> rx.Component:
     return rx.container(
             rx.vstack(
+                rx.cond(
+                    ~State.app_is_authenticated,
+                    rx.alert(
+                        rx.alert_icon(),
+                        rx.alert_title(AUTHENTICATE_DIALOG_HEADER_TEXT),
+                        rx.alert_description(
+                            rx.button(
+                                AUTHENTICATE_BUTTON_TEXT,
+                                on_click=rx.redirect(
+                                    State.spotify_auth_url,
+                                    external=True,
+                                ),
+                            ),
+                        ),
+                        status='error',
+                    ),
+                    rx.box()
+                ),
                 header_bar(),
                 rx.flex(
                     rx.spacer(),
@@ -23,16 +41,15 @@ def index() -> rx.Component:
                     rx.spacer(),
                     width='100vw'
                 ),
-
             ),
     )
 
 @rx.page(route='/sp_redirect')
 def post():
     return rx.center(
-        rx.text(State.redirect_uri_code)
+        rx.text(State.callback_code_and_state)
     )
 
 app = rx.App()
-app.add_page(index, on_load=State.on_load_library_fetch)
+app.add_page(index, on_load=State.on_load)
 app.compile()

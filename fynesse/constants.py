@@ -53,6 +53,9 @@ GENERATE_RECOMMENDATIONS_BUTTON_TEXT = 'germinate seeds 🪴'
 PLAYLIST_CREATE_DIALOG_HEADER_TEXT = 'new playlist'
 CREATE_PLAYLIST_BUTTON_TEXT = 'create playlist'
 
+AUTHENTICATE_DIALOG_HEADER_TEXT = 'log in with Spotify to continue'
+AUTHENTICATE_BUTTON_TEXT = 'log in'
+
 TARGET_ACOUSTICNESS_SLIDER_TEXT = 'target acousticness'
 TARGET_ENERGY_SLIDER_TEXT = 'target energy'
 TARGET_LIVENESS_SLIDER_TEXT = 'target liveness'

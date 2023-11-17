@@ -8,28 +8,120 @@ from .data import *
 from .utilities import *
 from .constants import *
 from icecream import ic
+import json
+import random
+import string
+import urllib
+import base64
+import requests
 
 class State(rx.State):
     """The app's base state;
-    contains logic around track data, recommendations, and playback
+    contains logic around authentication, track data, recommendations, and playback
     """
     
     @rx.var
-    def redirect_uri_code(self) -> str:
+    def callback_code_and_state(self) -> tuple[str]:
         args = self.router.page.params
-        code = args.get('code', [])
-        return code
-
-
-    _sp = Spotify(
-        auth_manager=SpotifyOAuth(
-            scope=SPOTIFY_API_SCOPES,
-            client_id=SPOTIPY_CLIENT_ID,
-            client_secret=SPOTIPY_CLIENT_SECRET,
-            redirect_uri=SPOTIPY_REDIRECT_URI,
-            open_browser=True
-        )
+        code = args.get('code', None)
+        state = args.get('state', None)
+        return code, state
+    
+    code_req_state: str = ''.join(
+        random.choice(
+            string.ascii_letters + string.digits
+        ) for i in range(16)
     )
+
+    @rx.var
+    def spotify_auth_url(self) -> str:
+        scope = ' '.join(SPOTIFY_API_SCOPES)
+
+        params = {
+            'response_type': 'code',
+            'client_id': SPOTIPY_CLIENT_ID,
+            'scope': scope,
+            'redirect_uri': SPOTIPY_REDIRECT_URI,
+            'state': self.code_req_state
+        }
+
+        auth_url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(params)
+        return auth_url
+    
+
+    def get_auth_token_from_callback(self):
+        print('Getting spotify authentication token')
+        code, state = self.callback_code_and_state
+        if state == self.code_req_state:
+            auth_options = {
+                'url': 'https://accounts.spotify.com/api/token',
+                'data': {
+                    'code': code,
+                    'redirect_uri': SPOTIPY_REDIRECT_URI,
+                    'grant_type': 'authorization_code'
+                },
+                'headers': {
+                    'content-type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + base64.b64encode((
+                        SPOTIPY_CLIENT_ID + ':' + SPOTIPY_CLIENT_SECRET
+                    ).encode()).decode('utf-8')
+                }
+            }
+            
+            response = requests.post(
+                auth_options['url'],
+                data=auth_options['data'],
+                headers=auth_options['headers']
+            )
+
+            enriched_response_dict = add_token_expiry_time(response.json())
+            # return enriched_response_dict
+            self.auth_token_json = json.dumps(enriched_response_dict)
+
+
+    def refresh_auth_token(self):
+        print('Refreshing Spotify authentication token')
+        auth_options = {
+                'url': 'https://accounts.spotify.com/api/token',
+                'data': {
+                    'refresh_token': self.auth_token_dict['refresh_token'],
+                    'grant_type': 'refresh_token'
+                },
+                'headers': {
+                    'content-type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + base64.b64encode((
+                        SPOTIPY_CLIENT_ID + ':' + SPOTIPY_CLIENT_SECRET
+                    ).encode()).decode('utf-8')
+                }
+            }
+            
+        response = requests.post(
+            auth_options['url'],
+            data=auth_options['data'],
+            headers=auth_options['headers']
+        )
+
+        enriched_response_dict = add_token_expiry_time(response.json())
+        self.auth_token_json = json.dumps(enriched_response_dict)
+
+    auth_token_json: rx.LocalStorage = ''
+
+
+    @rx.var
+    def app_is_authenticated(self) -> bool:
+        return len(self.auth_token_json) > 0
+
+    @rx.var
+    def auth_token_dict(self) -> dict:
+        if self.app_is_authenticated:
+            return json.loads(self.auth_token_json)
+        else: return {}
+    
+    def get_sp(self) -> Spotify:
+        if self.app_is_authenticated:
+            if token_expired(self.auth_token_dict):
+                self.refresh_auth_token()
+            return Spotify(auth=self.auth_token_dict['access_token'])
 
     playlist_tracks: dict[str, list[Track]] = {
         '': []
@@ -39,7 +131,6 @@ class State(rx.State):
     top_tracks: list[Track] = []
     search_tracks: list[Track] = []
     search_tracks_including_prev: list[Track] = []
-
 
     recc_tracks: list[Track] = []
     playlists: list[Playlist]
@@ -95,10 +186,10 @@ class State(rx.State):
     def fetch_playlists(self):
         print("Fetching playlist info")
 
-        pl_results = self._sp.current_user_playlists()
+        pl_results = self.get_sp().current_user_playlists()
         pl_items = pl_results['items']
         while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
+            pl_results = self.get_sp().next(pl_results)
             pl_items.extend(pl_results['items'])
 
         self.playlists = [Playlist(pl_dict) for pl_dict in pl_items]
@@ -116,10 +207,10 @@ class State(rx.State):
     def fetch_tracks_for_playlist(self, playlist: Playlist):
         print("Fetching playlist tracks for PL", playlist.playlist_name)
 
-        pl_results = self._sp.playlist_items(playlist.uri)
+        pl_results = self.get_sp().playlist_items(playlist.uri)
         playlist_tracks = pl_results['items']
         while pl_results['next']:
-            pl_results = self._sp.next(pl_results)
+            pl_results = self.get_sp().next(pl_results)
             playlist_tracks.extend(pl_results['items'])
         
         self.playlist_tracks[playlist.playlist_name] = [
@@ -132,7 +223,7 @@ class State(rx.State):
 
     def fetch_recent_tracks(self):
         print('Fetching recent tracks')
-        raw_rp_tracks = self._sp.current_user_recently_played(
+        raw_rp_tracks = self.get_sp().current_user_recently_played(
             limit=50
         )['items']
         self.recent_tracks = [
@@ -145,7 +236,7 @@ class State(rx.State):
 
     def fetch_liked_tracks_batch(self):
         print('Fetching a batch of liked tracks')
-        raw_liked_tracks = self._sp.current_user_saved_tracks(
+        raw_liked_tracks = self.get_sp().current_user_saved_tracks(
             limit=50,
             offset=len(self.liked_tracks)
         )['items']
@@ -157,7 +248,7 @@ class State(rx.State):
 
     def fetch_top_tracks(self):
         print('Fetching top tracks')
-        raw_top_tracks = self._sp.current_user_top_tracks(limit=50)['items']
+        raw_top_tracks = self.get_sp().current_user_top_tracks(limit=50)['items']
 
         self.top_tracks = [
             Track(item, track_enclosed_in_item=False)
@@ -184,7 +275,7 @@ class State(rx.State):
         for i in range(0, len(a_uris_subset), chunk_size):
             print('Fetching batch of artist genres')
             chunk = a_uris_subset[i:i + chunk_size] 
-            output_chunk = self._sp.artists(chunk)
+            output_chunk = self.get_sp().artists(chunk)
             artists.extend(output_chunk['artists'])
 
         genre_lookup_lists = [
@@ -261,9 +352,7 @@ class State(rx.State):
             in self.playlists
         ]
 
-
-    def on_load_library_fetch(self):
-        print(self.redirect_uri_code)
+    def initial_library_fetch(self):
         self.fetch_recent_tracks()
         self.fetch_liked_tracks_batch()
         self.fetch_playlists()
@@ -272,6 +361,16 @@ class State(rx.State):
         self.fetch_top_tracks()
 
 
+    def on_load(self):
+        ic(self.callback_code_and_state)
+        if not self.app_is_authenticated:
+            if self.callback_code_and_state != (None, None):
+                self.get_auth_token_from_callback()
+
+                self.initial_library_fetch()
+
+        else:
+            self.initial_library_fetch()
 
     ### RECOMMENDATIONS FROM API
     def fetch_recommendations(
@@ -299,7 +398,7 @@ class State(rx.State):
         ic(
             generation_params_dict
         )
-        raw_recc_tracks = self._sp.recommendations(
+        raw_recc_tracks = self.get_sp().recommendations(
             **generation_params_dict
         )
         recc_tracks_without_genre = [
@@ -320,7 +419,7 @@ class State(rx.State):
         print('Playing')
         ic(track_uris, self.active_devices)
         if len(self.active_devices) > 0:
-            self._sp.start_playback(
+            self.get_sp().start_playback(
                 uris=track_uris,
             )
     
@@ -331,7 +430,7 @@ class State(rx.State):
         print('Queueing')
         ic(track_uri, self.active_devices)
         if len(self.active_devices) > 0:
-            self._sp.add_to_queue(track_uri)
+            self.get_sp().add_to_queue(track_uri)
 
         
     ### PLAYLISTS
@@ -443,9 +542,11 @@ class State(rx.State):
         return [track.uri for track in self.recc_tracks]
     
     @rx.var
-    def active_devices(self) -> bool:
-        return [d for d in self._sp.devices()['devices'] if d['is_active']]
+    def active_devices(self) -> list:
+        if self.app_is_authenticated:
+            return [d for d in self.get_sp().devices()['devices'] if d['is_active']]
     
+
 class PlaylistDialogState(State):
     """State specific to the playlist creation dialogue"""
     show: bool = False
@@ -458,12 +559,12 @@ class PlaylistDialogState(State):
         self.pl_name = None
 
     def create_and_dismiss(self):
-        playlist_create_results = self._sp.user_playlist_create(
-                    user=self._sp.current_user()['id'],
+        playlist_create_results = self.get_sp().user_playlist_create(
+                    user=self.get_sp().current_user()['id'],
                     name=self.pl_name
                 )
         
-        self._sp.playlist_add_items(
+        self.get_sp().playlist_add_items(
             playlist_id=playlist_create_results['id'],
             items=self.recc_track_uris
         )
@@ -586,7 +687,7 @@ class SearchState(State):
         
         if query_is_valid:
             if self.search_results_type == SEARCH_RESULTS_TYPE_TRACKS:
-                raw_artists = self._sp.search(
+                raw_artists = self.get_sp().search(
                     q=self.combined_search_query,
                     type='track',
                     limit=self.num_results,
@@ -610,7 +711,7 @@ class SearchState(State):
                 
                 self.results_fetched = True
             else:
-                raw_artists = self._sp.search(
+                raw_artists = self.get_sp().search(
                     q=self.combined_search_query,
                     type='artist',
                     limit=self.num_results,
