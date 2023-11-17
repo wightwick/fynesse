@@ -75,7 +75,6 @@ class State(rx.State):
             )
 
             enriched_response_dict = add_token_expiry_time(response.json())
-            # return enriched_response_dict
             self.auth_token_json = json.dumps(enriched_response_dict)
 
 
@@ -84,7 +83,7 @@ class State(rx.State):
         auth_options = {
                 'url': 'https://accounts.spotify.com/api/token',
                 'data': {
-                    'refresh_token': self.auth_token_dict['refresh_token'],
+                    'refresh_token': json.loads(self.auth_token_json)['refresh_token'],
                     'grant_type': 'refresh_token'
                 },
                 'headers': {
@@ -103,25 +102,26 @@ class State(rx.State):
 
         enriched_response_dict = add_token_expiry_time(response.json())
         self.auth_token_json = json.dumps(enriched_response_dict)
+        print(self.auth_token_json)
 
-    auth_token_json: rx.LocalStorage = ''
-
+    auth_token_json: str = rx.LocalStorage()
 
     @rx.var
     def app_is_authenticated(self) -> bool:
         return len(self.auth_token_json) > 0
 
-    @rx.var
-    def auth_token_dict(self) -> dict:
-        if self.app_is_authenticated:
-            return json.loads(self.auth_token_json)
-        else: return {}
+    # @rx.var
+    # def auth_token_dict(self) -> dict:
+    #     if self.app_is_authenticated:
+    #         return json.loads(self.auth_token_json)
+    #     else: return {}
     
     def get_sp(self) -> Spotify:
         if self.app_is_authenticated:
-            if token_expired(self.auth_token_dict):
+            # ic(json.loads(self.auth_token_json), time.time())
+            if token_expired(json.loads(self.auth_token_json)):
                 self.refresh_auth_token()
-            return Spotify(auth=self.auth_token_dict['access_token'])
+            return Spotify(auth=json.loads(self.auth_token_json)['access_token'])
 
     playlist_tracks: dict[str, list[Track]] = {
         '': []
@@ -140,7 +140,7 @@ class State(rx.State):
 
     seed_track_uris_with_source: list[tuple[str, str]]
     seed_genres: list[str]
-    seed_artists_uris_names: list[tuple[str, str]]
+    seed_artists_uris_names: list[list[str]]
     selected_playlist: Playlist = Playlist()
     _genre_lookup: dict[str, str] = dict()
 
@@ -362,7 +362,6 @@ class State(rx.State):
 
 
     def on_load(self):
-        ic(self.callback_code_and_state)
         if not self.app_is_authenticated:
             if self.callback_code_and_state != (None, None):
                 self.get_auth_token_from_callback()
@@ -446,7 +445,7 @@ class State(rx.State):
 
     #### SEEDING
     def add_track_uri_to_seeds(self, uri: str, source: str):
-        if uri not in self.seed_track_uris_with_source:
+        if uri not in [uri for uri, source in self.seed_track_uris_with_source]:
             self.seed_track_uris_with_source = [*self.seed_track_uris_with_source, (uri, source)]
 
     def remove_track_uri_from_seeds(self, uri: str):
@@ -467,15 +466,15 @@ class State(rx.State):
             if g != genre
         ]
 
-    def add_artist_to_seeds(self, artist_info: tuple[str, str]):
-        if artist_info not in self.seed_artists_uris_names:
-            self.seed_artists_uris_names = [*self.seed_artists_uris_names, artist_info]
-        print(self.seed_artists_uris_names)
+    def add_artist_to_seeds(self, artist_info: list[str]):
+        if artist_info[0] not in self.seed_artist_uris:
+            self.seed_artists_uris_names = self.seed_artists_uris_names + [artist_info]
 
-    def remove_artist_from_seeds(self, artist: tuple[str, str]):
+    def remove_artist_from_seeds_by_uri(self, artist_uri: str):
+        print(self.seed_artists_uris_names)
         self.seed_artists_uris_names = [
-            a for a in self.seed_artists_uris_names
-            if a != artist
+            [a[0], a[1]] for a in self.seed_artists_uris_names
+            if a[0] != artist_uri
         ]
 
     @rx.var
@@ -496,7 +495,7 @@ class State(rx.State):
     
     @rx.var
     def seed_artist_uris(self) -> list[str]:
-        return [uri for uri, name in self.seed_artists_uris_names]
+        return [uri_name[0] for uri_name in self.seed_artists_uris_names]
     
     @rx.var
     def all_tracks(self) -> list[Track]:

@@ -26,7 +26,7 @@ def genre_card(genre: str):
 
 
 def artist_card(
-        artist_uri_name: tuple[str, str],
+        artist_uri_name: list[str],
         add_remove_button: bool
     ) -> rx.Component:
     return rx.box(
@@ -43,7 +43,7 @@ def artist_card(
                 ),
                 rx.button(
                     rx.icon(tag="minus"),
-                    on_click=State.remove_artist_from_seeds(artist_uri_name),
+                    on_click=State.remove_artist_from_seeds_by_uri(artist_uri_name.__getitem__(0)),
                     size='xs',
                     variant='ghost'
                 ),
@@ -129,7 +129,7 @@ def artist_card_lg(
         artist: Artist,
         show_genres: bool=False,
     ):
-    artist_uri_name = (artist.uri, artist.artist_name)
+    artist_uri_name = [artist.uri, artist.artist_name]
 
     return rx.box(
             rx.hstack(

@@ -8,7 +8,10 @@ from .views import *
 
 from .state import *
 from .constants import *
-
+@rx.page(
+    title=APP_NAME,
+    description=APP_DESCRIPTION,
+)
 def index() -> rx.Component:
     return rx.container(
             rx.vstack(
@@ -35,12 +38,6 @@ def index() -> rx.Component:
                     opacity=rx.cond(State.app_is_authenticated, 1, 0.3)
                 ),
             )
-    )
-
-@rx.page(route='/sp_redirect')
-def post():
-    return rx.center(
-        rx.text(State.callback_code_and_state)
     )
 
 app = rx.App()

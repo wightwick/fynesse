@@ -25,6 +25,7 @@ SPOTIFY_API_SCOPES = [
 ]
 
 APP_NAME = 'fynesse'
+APP_DESCRIPTION = 'Finesse your Spotify recommendations'
 
 LIBRARY_PANE_HEADER_TEXT = 'library'
 RECOMMENDATIONS_PANE_HEADER_TEXT = 'recommendations'
