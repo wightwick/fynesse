@@ -18,7 +18,9 @@ def index() -> rx.Component:
                 rx.box(
                     rx.cond(
                         State.app_is_authenticated,
-                        rx.box(on_mount=rx.redirect('/')), # clear url after auth
+                        rx.box(
+                            on_mount=rx.redirect('/')
+                            ), # clear url after auth
                         authenticate_alert(),
                     ),
                     width='60vw'

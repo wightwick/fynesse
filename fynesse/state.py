@@ -353,12 +353,13 @@ class State(rx.State):
         ]
 
     def initial_library_fetch(self):
-        self.fetch_recent_tracks()
-        self.fetch_liked_tracks_batch()
-        self.fetch_playlists()
-        self.selected_playlist = self.playlists[0]
-        self.fetch_tracks_for_playlist(self.selected_playlist)
-        self.fetch_top_tracks()
+        if len(self.top_tracks) == 0:
+            self.fetch_recent_tracks()
+            self.fetch_liked_tracks_batch()
+            self.fetch_playlists()
+            self.selected_playlist = self.playlists[0]
+            self.fetch_tracks_for_playlist(self.selected_playlist)
+            self.fetch_top_tracks()
 
 
     def on_load(self):
@@ -415,7 +416,7 @@ class State(rx.State):
             track_uris: list[str],
         ):
         print('Playing')
-        ic(track_uris, self.active_devices)
+        # ic(track_uris, self.active_devices)
         if len(self.active_devices) > 0:
             self.get_sp().start_playback(
                 uris=track_uris,
@@ -426,7 +427,7 @@ class State(rx.State):
 
     def queue_track_uri(self, track_uri: Track):
         print('Queueing')
-        ic(track_uri, self.active_devices)
+        # ic(track_uri, self.active_devices)
         if len(self.active_devices) > 0:
             self.get_sp().add_to_queue(track_uri)
 
@@ -540,9 +541,11 @@ class State(rx.State):
         return [track.uri for track in self.recc_tracks]
     
     @rx.var
-    def active_devices(self) -> list:
+    def active_devices(self) -> list[dict]:
         if self.app_is_authenticated:
-            return [d for d in self.get_sp().devices()['devices'] if d['is_active']]
+            active_devices = [d for d in self.get_sp().devices()['devices'] if d['is_active']]
+            return active_devices
+        
     
 
 class PlaylistDialogState(State):
