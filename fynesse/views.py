@@ -125,7 +125,7 @@ def library_view() -> rx.Component:
     return rx.box(
         tabs,
         width='100%',
-        min_width=340
+        min_width=370
     )
 
 

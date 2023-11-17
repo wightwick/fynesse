@@ -48,6 +48,7 @@ class State(rx.State):
         auth_url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(params)
         return auth_url
     
+    auth_token_json: str = rx.LocalStorage('', name='auth_token')
 
     def get_auth_token_from_callback(self):
         print('Getting spotify authentication token')
@@ -80,10 +81,11 @@ class State(rx.State):
 
     def refresh_auth_token(self):
         print('Refreshing Spotify authentication token')
+        refresh_token = json.loads(self.auth_token_json)['refresh_token']
         auth_options = {
                 'url': 'https://accounts.spotify.com/api/token',
                 'data': {
-                    'refresh_token': json.loads(self.auth_token_json)['refresh_token'],
+                    'refresh_token': refresh_token,
                     'grant_type': 'refresh_token'
                 },
                 'headers': {
@@ -100,28 +102,21 @@ class State(rx.State):
             headers=auth_options['headers']
         )
 
-        enriched_response_dict = add_token_expiry_time(response.json())
+        enriched_response_dict = {
+            **add_token_expiry_time(response.json()),
+            'refresh_token': refresh_token
+        }
         self.auth_token_json = json.dumps(enriched_response_dict)
-        print(self.auth_token_json)
-
-    auth_token_json: str = rx.LocalStorage()
 
     @rx.var
     def app_is_authenticated(self) -> bool:
         return len(self.auth_token_json) > 0
-
-    # @rx.var
-    # def auth_token_dict(self) -> dict:
-    #     if self.app_is_authenticated:
-    #         return json.loads(self.auth_token_json)
-    #     else: return {}
     
     def get_sp(self) -> Spotify:
         if self.app_is_authenticated:
-            # ic(json.loads(self.auth_token_json), time.time())
-            if token_expired(json.loads(self.auth_token_json)):
-                self.refresh_auth_token()
             return Spotify(auth=json.loads(self.auth_token_json)['access_token'])
+
+    library_fetched: bool = False
 
     playlist_tracks: dict[str, list[Track]] = {
         '': []
@@ -351,13 +346,14 @@ class State(rx.State):
         ]
 
     def initial_library_fetch(self):
-        if len(self.top_tracks) == 0:
+        if not self.library_fetched:
             self.fetch_recent_tracks()
             self.fetch_liked_tracks_batch()
             self.fetch_playlists()
             self.selected_playlist = self.playlists[0]
             self.fetch_tracks_for_playlist(self.selected_playlist)
             self.fetch_top_tracks()
+            self.library_fetched = True
 
 
     def on_load(self):
@@ -367,6 +363,9 @@ class State(rx.State):
                 self.initial_library_fetch()
 
         else:
+            if token_expired(json.loads(self.auth_token_json)):
+                self.refresh_auth_token()
+
             self.initial_library_fetch()
 
     ### RECOMMENDATIONS FROM API
