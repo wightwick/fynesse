@@ -206,7 +206,9 @@ def pane(
 def sub_pane(
         content: rx.Component,
         heading: str,
-        border_color: str = None
+        border_color: str = None,
+        width='100%',
+        **kwargs
     ) -> rx.Component:
     return rx.box(
             rx.vstack(
@@ -228,7 +230,8 @@ def sub_pane(
                 ),
                 align_items='left'
             ),
-            width='100%'
+            width=width,
+            **kwargs
         )
 
 

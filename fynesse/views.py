@@ -110,6 +110,7 @@ def library_view() -> rx.Component:
             rx.tab(PLAYLIST_TAB_NAME_TEXT),
             rx.tab(RECENTLY_PLAYED_TAB_NAME_TEXT),
             rx.tab(TOP_TAB_NAME_TEXT),
+            # spacing=10
         ),
         rx.tab_panels(
             rx.tab_panel(liked_songs_view_panel()),
@@ -123,7 +124,8 @@ def library_view() -> rx.Component:
 
     return rx.box(
         tabs,
-        width=410
+        width='100%',
+        min_width=340
     )
 
 
@@ -225,7 +227,8 @@ def search_view():
 
                 heading=RESULTS_SUB_PANE_HEADER_TEXT,
             ),
-        )
+        ),
+        min_width=320
     )
 
 
@@ -395,7 +398,7 @@ def recommendations_view():
                         width='100%'
                     ),
                     heading=RESULTS_SUB_PANE_HEADER_TEXT,
-                    border_color=SPOTIFY_GREEN
+                    border_color=SPOTIFY_GREEN,
                 ),
                 sub_pane(
                     rx.cond(
@@ -406,8 +409,9 @@ def recommendations_view():
                     heading=RESULTS_SUB_PANE_HEADER_TEXT,
                 ),
             ),
+            min_width=320
         ),
-        playlist_create_dialog()
+        playlist_create_dialog(),
     )
 
 
