@@ -141,7 +141,10 @@ def search_view():
                             rx.hstack(
                                 rx.foreach(
                                     SEARCH_RESULTS_TYPE_OPTIONS,
-                                    lambda option: rx.radio(option),
+                                    lambda option: rx.radio(
+                                        option,
+                                        color_scheme='green'
+                                    ),
                                 ),
                                 spacing="2em",
                             ),
@@ -298,10 +301,13 @@ def playlist_create_dialog():
                     )
                 ),
                 rx.alert_dialog_body(
-                    rx.input(
-                        placeholder='name',
-                        on_change=PlaylistDialogState.set_pl_name,
-                    ),
+                    rx.debounce_input(
+                        rx.input(
+                            placeholder='name',
+                            on_change=PlaylistDialogState.set_pl_name,
+                        ),
+                        debounce_timeout=100
+                    )
                 ),
                 rx.alert_dialog_footer(
                     rx.button(

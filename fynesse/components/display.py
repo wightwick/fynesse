@@ -129,7 +129,6 @@ def artist_card_lg(
         artist: Artist,
         show_genres: bool=False,
     ):
-    artist_uri_name = [artist.uri, artist.artist_name]
 
     return rx.box(
             rx.hstack(
@@ -162,8 +161,8 @@ def artist_card_lg(
                 rx.spacer(),
                 rx.button(
                     '🌱',
-                    on_click=State.add_artist_to_seeds(artist_uri_name),
-                    is_disabled=State.seed_artist_uris.contains(artist_uri_name[0]),
+                    on_click=State.add_artist_to_seeds([artist.uri, artist.artist_name]),
+                    is_disabled=State.seed_artist_uris.contains(artist.uri),
                 ),
 
         ),

@@ -9,6 +9,7 @@ class Artist(rx.Base):
     genres: list[str] = []
 
     def with_genres(self, genres):
+        # print('Adding genres to artist', self.artist_name)
         self.genres = genres
         return self
 

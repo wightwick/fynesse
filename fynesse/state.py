@@ -251,11 +251,11 @@ class State(rx.State):
         self.top_tracks_have_genre = False
 
 
-    def _update_genre_dict_from_artist_uris(
+    def _updated_genre_dict_from_artist_uris(
         self,
         a_uris: list[str],
-        existing_genre_lookup: dict[str, str], 
-    ):
+        existing_genre_lookup: dict[str, list], 
+    ) -> dict[str, list]:
         artists = []
         chunk_size = 50
         a_uris_subset = list(
@@ -275,16 +275,17 @@ class State(rx.State):
             {a['uri']:a['genres']} for a in
             artists
         ]
-        genre_lookup = {
+
+        new_genre_lookup = {
             k: v
             for d
             in genre_lookup_lists
             for k, v
             in d.items()
         }
-        genre_lookup.update(existing_genre_lookup)
+        expanded_genre_lookup = new_genre_lookup | existing_genre_lookup
 
-        return genre_lookup
+        return expanded_genre_lookup
 
 
     def _fetch_genres_for_track_list(
@@ -297,7 +298,7 @@ class State(rx.State):
                 for t in track_list
             ]
         )
-        self._genre_lookup = self._update_genre_dict_from_artist_uris(
+        self._genre_lookup = self._updated_genre_dict_from_artist_uris(
             artist_uris,
             self._genre_lookup,
         )
@@ -357,12 +358,14 @@ class State(rx.State):
 
 
     def on_load(self):
+
         if not self.app_is_authenticated:
             if self.callback_code_and_state != (None, None):
                 self.get_auth_token_from_callback()
                 self.initial_library_fetch()
 
         else:
+            
             if token_expired(json.loads(self.auth_token_json)):
                 self.refresh_auth_token()
 
@@ -413,8 +416,8 @@ class State(rx.State):
             track_uris: list[str],
         ):
         print('Playing')
-        # ic(track_uris, self.active_devices)
-        if len(self.active_devices) > 0:
+        # ic(track_uris, self.active_devices())
+        if len(self.active_devices()) > 0:
             self.get_sp().start_playback(
                 uris=track_uris,
             )
@@ -424,8 +427,8 @@ class State(rx.State):
 
     def queue_track_uri(self, track_uri: Track):
         print('Queueing')
-        # ic(track_uri, self.active_devices)
-        if len(self.active_devices) > 0:
+        # ic(track_uri, self.active_devices())
+        if len(self.active_devices()) > 0:
             self.get_sp().add_to_queue(track_uri)
 
         
@@ -457,6 +460,7 @@ class State(rx.State):
     def add_artist_to_seeds(self, artist_info: list[str]):
         if artist_info[0] not in self.seed_artist_uris:
             self.seed_artists_uris_names = self.seed_artists_uris_names + [artist_info]
+        print(self.seed_artists_uris_names)
 
     def remove_artist_from_seeds_by_uri(self, artist_uri: str):
         print(self.seed_artists_uris_names)
@@ -527,9 +531,8 @@ class State(rx.State):
     def recc_track_uris(self) -> list[str]:
         return [track.uri for track in self.recc_tracks]
     
-    @rx.var
     def active_devices(self) -> list[dict]:
-        if self.app_is_authenticated:
+        if self.app_is_authenticated and not token_expired(json.loads(self.auth_token_json)):
             active_devices = [d for d in self.get_sp().devices()['devices'] if d['is_active']]
             return active_devices
         
@@ -547,21 +550,22 @@ class PlaylistDialogState(State):
         self.pl_name = None
 
     def create_and_dismiss(self):
-        playlist_create_results = self.get_sp().user_playlist_create(
-                    user=self.get_sp().current_user()['id'],
-                    name=self.pl_name
-                )
-        
-        self.get_sp().playlist_add_items(
-            playlist_id=playlist_create_results['id'],
-            items=self.recc_track_uris
-        )
-        self.change()
-        self.clear_name()
+        if len(self.pl_name) > 0:
+            playlist_create_results = self.get_sp().user_playlist_create(
+                        user=self.get_sp().current_user()['id'],
+                        name=self.pl_name
+                    )
+            
+            self.get_sp().playlist_add_items(
+                playlist_id=playlist_create_results['id'],
+                items=self.recc_track_uris
+            )
+            self.change()
+            self.clear_name()
 
     @rx.var
     def name_invalid(self) -> bool:
-        return self.pl_name is None
+        return self.pl_name is None or len(self.pl_name) == 0 
 
 class SearchState(State):
     """State specific to the search functionality"""
@@ -614,7 +618,7 @@ class SearchState(State):
 
 
     num_results: int = NUM_SEARCH_RESULTS_DEFAULT
-    more_results_exist: bool
+    more_results_exist: bool = False
 
     results_fetched: bool = False
 
@@ -650,17 +654,14 @@ class SearchState(State):
                 for a in artist_list
             ]
         
-        self._genre_lookup = self._update_genre_dict_from_artist_uris(
+        self._genre_lookup = self._updated_genre_dict_from_artist_uris(
             artist_uris,
             self._genre_lookup,
         )
 
         return [
             artist.with_genres(
-                flat_genre_list_for_artist_uris(
-                    [artist.uri],
-                    self._genre_lookup
-                )
+                list(self._genre_lookup.get(artist.uri, []))
             )
             for artist
             in artist_list
@@ -698,7 +699,7 @@ class SearchState(State):
                     
                 
                 self.results_fetched = True
-            else:
+            elif self.search_results_type == SEARCH_RESULTS_TYPE_ARTISTS:
                 raw_artists = self.get_sp().search(
                     q=self.combined_search_query,
                     type='artist',
@@ -708,11 +709,17 @@ class SearchState(State):
                 raw_artist_items = raw_artists['items']
                 self.more_results_exist = bool(raw_artists['next'])
 
-                self.artist_results = self.artist_results * (not initial) +\
-                    [
-                        Artist(i)
-                        for i in raw_artist_items
-                    ]
+                new_artist_results = [
+                            Artist(i)
+                            for i in raw_artist_items
+                        ]
+
+                if not initial:
+                    self.artist_results = self.artist_results + new_artist_results
+                else:
+                    self.artist_results = new_artist_results
+
+                    
                 self.artist_results = self._fetch_genres_for_artist_list(
                     self.artist_results
                 )

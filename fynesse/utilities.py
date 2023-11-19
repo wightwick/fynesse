@@ -7,7 +7,7 @@ def flatten_list_of_lists(list_of_lists: list[list]) -> list:
         for item in sublist
     ]
 
-def flat_genre_list_for_artist_uris(a_uris: list[str], genre_lookup: dict[str, str]):
+def flat_genre_list_for_artist_uris(a_uris: list[str], genre_lookup: dict[str, list]):
     flat_genre_list = flatten_list_of_lists( 
         [genre_lookup[a] for a in a_uris]
     )
