@@ -68,7 +68,7 @@ def switchable_param_slider(
                     # value=initial_value,
                     default_value=0,
                     is_disabled=~state_enabled_var,
-                    on_change=state_value_setter,
+                    on_change_end=state_value_setter,
                     min_=0,
                     max_=100,
                     color_scheme='green',
@@ -93,7 +93,7 @@ def param_slider(
             ),
             rx.slider(
                     default_value=default_value,
-                    on_change=on_change,
+                    on_change_end=on_change,
                     min_=min_max[0],
                     max_=min_max[1],
                     color_scheme='green',
