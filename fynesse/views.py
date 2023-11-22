@@ -268,12 +268,12 @@ def seeds_view() -> rx.Component:
     return rx.cond(
             State.too_many_seeds,
             sub_pane(
-                content=seeds_list(),
+                children=seeds_list(),
                 heading=rx.text(TOO_MANY_SEEDS_HEADER_TEXT, color=SUB_PANE_WARNING_RED),
                 border_color=SUB_PANE_WARNING_RED
             ),
             sub_pane(
-                content=seeds_list(),
+                children=seeds_list(),
                 heading=SEEDS_SUB_PANE_HEADER_TEXT,
             )
 
@@ -327,7 +327,7 @@ def recommendations_view():
         rx.vstack(
             seeds_view(),
             sub_pane(
-                content=rx.vstack(
+                children=rx.vstack(
                     switchable_param_slider(
                         TARGET_ACOUSTICNESS_SLIDER_TEXT,
                         state_value_setter=State.set_recc_target_acousticness_value,

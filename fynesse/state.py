@@ -22,6 +22,7 @@ class State(rx.State):
     
     @rx.var
     def callback_code_and_state(self) -> tuple[str]:
+        """Code and state from callback uri after redirect"""
         args = self.router.page.params
         code = args.get('code', None)
         state = args.get('state', None)
@@ -35,6 +36,7 @@ class State(rx.State):
 
     @rx.var
     def spotify_auth_url(self) -> str:
+        """Url to take user to Spotify authentication page"""
         scope = ' '.join(SPOTIFY_API_SCOPES)
 
         params = {
@@ -51,6 +53,11 @@ class State(rx.State):
     auth_token_json: str = rx.LocalStorage('', name='auth_token')
 
     def get_auth_token_from_callback(self):
+        """Request an authentication token from Spotify based on the code
+        provided in the redirect. If the state string provided in tbe redirect
+        does not match that provided for the authentication url, do not accept
+        it. Update state var with provided auth token
+        """
         print('Getting spotify authentication token')
         code, state = self.callback_code_and_state
         if state == self.code_req_state:
@@ -80,6 +87,9 @@ class State(rx.State):
 
 
     def refresh_auth_token(self):
+        """Use authentication token's 'refresh_token' property to request a new
+        spotify authenticatioun token; update the state var accordingly
+        """
         print('Refreshing Spotify authentication token')
         refresh_token = json.loads(self.auth_token_json)['refresh_token']
         auth_options = {
@@ -113,6 +123,7 @@ class State(rx.State):
         return len(self.auth_token_json) > 0
     
     def get_sp(self) -> Spotify:
+        """Get a spotify instance"""
         if self.app_is_authenticated:
             return Spotify(auth=json.loads(self.auth_token_json)['access_token'])
 
@@ -215,7 +226,6 @@ class State(rx.State):
             and 'spotify:local' not in item['track']['uri']
         ]
 
-
     def fetch_recent_tracks(self):
         print('Fetching recent tracks')
         raw_rp_tracks = self.get_sp().current_user_recently_played(
@@ -228,7 +238,6 @@ class State(rx.State):
         ]
         self.top_tracks_have_genre = False
     
-
     def fetch_liked_tracks_batch(self):
         print('Fetching a batch of liked tracks')
         raw_liked_tracks = self.get_sp().current_user_saved_tracks(
@@ -250,12 +259,15 @@ class State(rx.State):
         ]
         self.top_tracks_have_genre = False
 
-
     def _updated_genre_dict_from_artist_uris(
         self,
         a_uris: list[str],
         existing_genre_lookup: dict[str, list], 
     ) -> dict[str, list]:
+        """Return an updated dictionary mapping artist uris to lists of genres.
+        Find which artist uris are not already in genre dict, query API for
+        their genres, add the new artists to the genre dict and return it
+        """
         artists = []
         chunk_size = 50
         a_uris_subset = list(
@@ -287,7 +299,6 @@ class State(rx.State):
 
         return expanded_genre_lookup
 
-
     def _fetch_genres_for_track_list(
             self,
             track_list: list[Track]
@@ -313,7 +324,6 @@ class State(rx.State):
             for track
             in track_list
         ]
-
 
     def _track_list_with_genres(self, track_list: list[Track]) -> list[Track]:
         track_list = self._fetch_genres_for_track_list(
@@ -358,14 +368,12 @@ class State(rx.State):
 
 
     def on_load(self):
-
         if not self.app_is_authenticated:
             if self.callback_code_and_state != (None, None):
                 self.get_auth_token_from_callback()
                 self.initial_library_fetch()
 
         else:
-            
             if token_expired(json.loads(self.auth_token_json)):
                 self.refresh_auth_token()
 
@@ -434,6 +442,7 @@ class State(rx.State):
         
     ### PLAYLISTS
     def select_playlist(self, pl_name: str):
+        """Select a playlist for display in the playlist view"""
         self.selected_playlist = [
             pl 
             for pl 
@@ -471,11 +480,6 @@ class State(rx.State):
 
     @rx.var
     def seed_tracks(self) -> list[Track]:
-        # all_tracks_flattened = [
-        #     item for sublist
-        #     in self.playlist_tracks.values() 
-        #     for item in sublist
-        # ]
         return [
             [t for t in self.all_tracks if t.uri == u][0]
             for u in self.seed_track_uris
@@ -536,7 +540,6 @@ class State(rx.State):
             active_devices = [d for d in self.get_sp().devices()['devices'] if d['is_active']]
             return active_devices
         
-    
 
 class PlaylistDialogState(State):
     """State specific to the playlist creation dialogue"""
@@ -567,6 +570,7 @@ class PlaylistDialogState(State):
     def name_invalid(self) -> bool:
         return self.pl_name is None or len(self.pl_name) == 0 
 
+
 class SearchState(State):
     """State specific to the search functionality"""
     search_genre: str
@@ -580,9 +584,6 @@ class SearchState(State):
     genre_search_enabled: bool = True
 
     search_results_type: str = SEARCH_RESULTS_TYPE_TRACKS
-
-    # a list of tuple of (URI, name) for each artist
-    # artist_results: list[tuple[str, str]] = []
 
     artist_results: list[Artist] = []
 
@@ -615,7 +616,6 @@ class SearchState(State):
     def set_search_artist(self, artist: str):
         self.search_artist = artist
         self.fetch_search_results()
-
 
     num_results: int = NUM_SEARCH_RESULTS_DEFAULT
     more_results_exist: bool = False
@@ -667,8 +667,12 @@ class SearchState(State):
             in artist_list
         ]
 
-
     def fetch_search_results(self, initial: bool = True):
+        """Fetch search results from API based on input text fields.
+        If initial, clear search results, otherwise add new results to list.
+        Either tracks or artists are searched for based on 
+        self.search_results_type
+        """
         print('Fetching search results')
         query_text = self.combined_search_query
         ic(query_text)
@@ -726,11 +730,8 @@ class SearchState(State):
 
                 self.results_fetched = True
 
-        
-
     def fetch_more_search_results(self):
         self.fetch_search_results(initial=False)
-
 
     @rx.var
     def combined_search_query(self) -> str:

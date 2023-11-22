@@ -7,7 +7,10 @@ from fynesse.state import Artist, SearchState, State, Track
 import reflex as rx
 
 
-def genre_card(genre: str):
+def genre_card(genre: str) -> rx.Component:
+    """Small card showing genre name. Button displayed to right of name
+    to bring the genre into the search field
+    """
     return rx.box(
         rx.hstack(
             rx.text('#' + genre, as_='small'),
@@ -29,6 +32,9 @@ def artist_card(
         artist_uri_name: list[str],
         add_remove_button: bool
     ) -> rx.Component:
+    """Small card showing artist's name. If add_remove_button, add to seeds
+    button displayed; otherwise remove from seeds button displayed
+    """
     return rx.box(
         rx.hstack(
             rx.text(artist_uri_name.__getitem__(1)),
@@ -37,13 +43,17 @@ def artist_card(
                 rx.button(
                     '🌱',
                     on_click=State.add_artist_to_seeds(artist_uri_name),
-                    is_disabled=State.seed_artist_uris.contains(artist_uri_name.__getitem__(0)),
+                    is_disabled=State.seed_artist_uris.contains(
+                        artist_uri_name.__getitem__(0)
+                    ),
                     size='xs',
                     variant='ghost'
                 ),
                 rx.button(
                     rx.icon(tag="minus"),
-                    on_click=State.remove_artist_from_seeds_by_uri(artist_uri_name.__getitem__(0)),
+                    on_click=State.remove_artist_from_seeds_by_uri(
+                        artist_uri_name.__getitem__(0)
+                    ),
                     size='xs',
                     variant='ghost'
                 ),
@@ -63,6 +73,12 @@ def track_card(
         show_genres: bool=False,
         genres_interactive: bool=True
     ):
+    """Card showing information about a track. Always shows name, artist name,
+    album name. Genres clickable (if genres_interactive) otherwise displayed as 
+    comma-separated text. Artists can be clickable to add seed (if
+    artists_interactive) otherwise displayed as comma separated text. Buttons
+    passed in via buttons are rendered in a vertical stack
+    """
     return rx.box(
             rx.hstack(
                 rx.image(
@@ -129,7 +145,9 @@ def artist_card_lg(
         artist: Artist,
         show_genres: bool=False,
     ):
-
+    """Large artist card for display in search results. Shows name,
+    artist image, clickable artist genres (if show_genres
+    """
     return rx.box(
             rx.hstack(
                 rx.image(
@@ -175,10 +193,11 @@ def artist_card_lg(
 
 
 def pane(
-        content: rx.component,
+        children: rx.component,
         heading_text: str,
         padding: int = 4
     ) -> rx.Component:
+    """Top-level view; displays arbitrary children with a text heading"""
     return rx.box(
         rx.vstack(
             rx.heading(
@@ -188,7 +207,7 @@ def pane(
                 z_index=2,
             ),
             rx.box(
-                content,
+                children,
                 border_width='thick',
                 border_radius='3xl',
                 padding=padding,
@@ -203,12 +222,13 @@ def pane(
 
 
 def sub_pane(
-        content: rx.Component,
+        children: rx.Component,
         heading: str,
         border_color: str = None,
         width='100%',
         **kwargs
     ) -> rx.Component:
+    """Second-level view; displays arbitrary children with a text heading"""
     return rx.box(
             rx.vstack(
                 rx.heading(
@@ -219,7 +239,7 @@ def sub_pane(
                     z_index=2
                 ),
                 rx.box(
-                    content,
+                    children,
                     border_width='medium',
                     border_radius='xl',
                     border_color=border_color,

@@ -14,8 +14,10 @@ def switchable_input_field(
         on_change: callable,
         state_enabled_var: callable,
         state_toggle_fn: callable,
-    ):
-    
+    ) -> rx.Component:
+    """Input field with a title displayed above uit and a switch to
+    enable/disable it
+    """ 
     return rx.vstack(
         rx.text(
             name,
@@ -51,8 +53,10 @@ def switchable_param_slider(
         state_value_setter: callable,
         state_enabled_var: callable,
         state_enable_disable_fn: callable
-    ):
-
+    ) -> rx.Component:
+    """Slider with a title displayed above it and a switch
+    to enable/disable it
+    """
     return rx.box(
         rx.vstack(
             rx.hstack(
@@ -84,7 +88,8 @@ def param_slider(
         on_change: callable,
         default_value: int,
         min_max: list[int]
-    ):
+    ) -> rx.Component:
+    """Slider with a title displayed above it"""
     return rx.box(
         rx.vstack(
             rx.text(
@@ -111,7 +116,6 @@ def track_queue_button(track: Track) -> rx.Component:
             rx.icon(tag='hamburger'),
             spacing='-1'
         ),
-        # rx.icon(tag='plus_square'),
         on_click=State.queue_track_uri(track.uri),
      )
 
@@ -135,6 +139,7 @@ def track_add_seed_button(track: Track, source: str) -> rx.Component:
 
 
 def track_multi_button(track: Track) -> rx.Component:
+    """Button to show popover with options to add seed, play, queue"""
     return rx.popover(
         rx.popover_trigger(
             rx.button(
@@ -168,7 +173,8 @@ def pane_button(
         text: str,
         on_click: callable,
         is_disabled: bool = False
-):
+) -> rx.Component:
+    """Button with larger corner radius styled for use in a pane"""
     return rx.button(
         text,
         on_click=on_click,
@@ -182,7 +188,8 @@ def sub_pane_button(
         text: str,
         on_click: callable,
         is_disabled: bool = False
-    ):
+    ) -> rx.Component:
+    """Button with smaller corner radius styled for use in a sub pane"""
     return rx.button(
         rx.text(text),
         on_click=on_click,
