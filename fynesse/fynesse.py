@@ -8,6 +8,7 @@ from .views import *
 
 from .state import *
 from .constants import *
+
 @rx.page(
     title=APP_NAME,
     description=APP_DESCRIPTION,
@@ -23,7 +24,8 @@ def index() -> rx.Component:
                             ), # clear url after auth
                         authenticate_alert(),
                     ),
-                    width='60vw'
+                    width='60vw',
+                    height='0vh'
                 ),
                 rx.vstack(
                     header_bar(),
@@ -37,8 +39,12 @@ def index() -> rx.Component:
                         rx.spacer(),
                         width='100vw'
                     ),
-                    opacity=rx.cond(State.app_is_authenticated, 1, 0.3)
+                    rx.spacer(),
+                    footer(),
+                    opacity=rx.cond(State.app_is_authenticated, 1, 0.3),
+                    height='100%'
                 ),
+                height='100vh'
             )
     )
 

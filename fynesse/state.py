@@ -86,7 +86,7 @@ class State(rx.State):
             self.auth_token_json = json.dumps(enriched_response_dict)
 
 
-    def refresh_auth_token(self):
+    def _refresh_auth_token(self):
         """Use authentication token's 'refresh_token' property to request a new
         spotify authenticatioun token; update the state var accordingly
         """
@@ -375,7 +375,7 @@ class State(rx.State):
 
         else:
             if token_expired(json.loads(self.auth_token_json)):
-                self.refresh_auth_token()
+                self._refresh_auth_token()
 
             self.initial_library_fetch()
 
@@ -424,11 +424,16 @@ class State(rx.State):
             track_uris: list[str],
         ):
         print('Playing')
-        # ic(track_uris, self.active_devices())
-        if len(self.active_devices()) > 0:
+        if len(self.active_devices) > 0:
             self.get_sp().start_playback(
                 uris=track_uris,
             )
+        # elif len(track_uris) == 1:
+        #     track_link = self.get_sp().track(
+        #         track_id=track_uris[0].split(':')[-1]
+        #     )['external_urls']['spotify']
+        #     print(track_link)
+        #     rx.redirect(track_link, external=True)
     
     def play_all_recommended_tracks(self):
         self.play_track_uris(self.recc_track_uris)
@@ -436,7 +441,7 @@ class State(rx.State):
     def queue_track_uri(self, track_uri: Track):
         print('Queueing')
         # ic(track_uri, self.active_devices())
-        if len(self.active_devices()) > 0:
+        if len(self.active_devices) > 0:
             self.get_sp().add_to_queue(track_uri)
 
         
@@ -535,10 +540,26 @@ class State(rx.State):
     def recc_track_uris(self) -> list[str]:
         return [track.uri for track in self.recc_tracks]
     
+    @rx.var
     def active_devices(self) -> list[dict]:
-        if self.app_is_authenticated and not token_expired(json.loads(self.auth_token_json)):
+        if self.app_is_authenticated:
+            if token_expired(json.loads(self.auth_token_json)):
+                self._refresh_auth_token()
+
             active_devices = [d for d in self.get_sp().devices()['devices'] if d['is_active']]
             return active_devices
+        else:
+            return []
+
+    @rx.var
+    def active_device_exists(self) -> bool:
+        return len(self.active_devices) > 0
+    
+    @rx.var
+    def active_device_name(self) -> str:
+        if self.active_device_exists:
+            return self.active_devices[0]['name']
+        else: return ''
         
 
 class PlaylistDialogState(State):

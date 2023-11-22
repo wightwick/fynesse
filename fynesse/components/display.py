@@ -254,9 +254,34 @@ def sub_pane(
         )
 
 
-def hint_text(text: str):
+def hint_text(text: str) -> rx.Component:
     return rx.text(
         text,
         opacity=0.3,
         text_align='center',
+    )
+
+def spotify_image_link(dark_mode: bool) -> rx.Component:
+    img_src = 'Spotify_Logo_RGB_White.png' if dark_mode\
+        else 'Spotify_Logo_RGB_Black.png'
+    return rx.link(
+        rx.image(src=img_src, height='21px'),
+        href='https://open.spotify.com'
+    )
+
+def footer() -> rx.Component:
+    return rx.center(
+        rx.hstack(
+            rx.text('all track, artist and genre information from'),
+            rx.color_mode_cond(
+                light=spotify_image_link(dark_mode=False),
+                dark=spotify_image_link(dark_mode=True)
+            )
+        ),
+        height=50,
+        border_top_width='thin',
+        width='100%',
+        padding=8,
+        padding_bottom=35,
+        align='center'
     )

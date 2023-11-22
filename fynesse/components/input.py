@@ -121,12 +121,20 @@ def track_queue_button(track: Track) -> rx.Component:
 
 
 def track_play_button(track: Track) -> rx.Component:
-    return rx.button(
-        rx.box(
-            rx.icon(tag='triangle_down'),
-            transform='rotate(-90deg)'
+    icon = rx.box(
+        rx.icon(tag='triangle_down'),
+        transform='rotate(-90deg)'
+    )
+    return rx.cond(
+        State.active_device_exists,
+        rx.button(
+            icon,
+            on_click=State.play_track_uris([track.uri]),
         ),
-        on_click=State.play_track_uris([track.uri]),
+        rx.button(
+            icon,
+            on_click=rx.redirect(track.spotify_url, external=True)
+        )
     )
 
 
@@ -171,29 +179,25 @@ def track_remove_seed_button(track: Track) -> rx.Component:
 
 def pane_button(
         text: str,
-        on_click: callable,
-        is_disabled: bool = False
+        **kwargs
 ) -> rx.Component:
     """Button with larger corner radius styled for use in a pane"""
     return rx.button(
         text,
-        on_click=on_click,
-        is_disabled=is_disabled,
         width='100%',
-        border_radius='xl'
+        border_radius='xl',
+        **kwargs
     )
 
 
 def sub_pane_button(
         text: str,
-        on_click: callable,
-        is_disabled: bool = False
+        **kwargs
     ) -> rx.Component:
     """Button with smaller corner radius styled for use in a sub pane"""
     return rx.button(
         rx.text(text),
-        on_click=on_click,
         size='md',
-        is_disabled=is_disabled,
-        width='100%'
+        width='100%',
+        **kwargs
     )

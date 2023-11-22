@@ -378,9 +378,23 @@ def recommendations_view():
                 sub_pane(
                     rx.vstack(
                         rx.hstack(
-                            sub_pane_button(
-                                text=PLAY_ALL_TRACKS_BUTTON_TEXT,
-                                on_click=State.play_all_recommended_tracks
+                            rx.cond(
+                                State.active_device_exists,
+                                sub_pane_button(
+                                    text=PLAY_ALL_TRACKS_BUTTON_TEXT,
+                                    on_click=State.play_all_recommended_tracks
+                                ),
+                                rx.popover(
+                                    rx.popover_trigger(
+                                        sub_pane_button(
+                                            text=PLAY_ALL_TRACKS_BUTTON_TEXT,
+                                        )
+                                    ),
+                                    rx.popover_content(
+                                        rx.popover_header("active spotify device required to play multiple tracks"),
+                                        rx.popover_close_button(),
+                                    ),
+                                )
                             ),
                             sub_pane_button(
                                 text=SAVE_PLAYLIST_BUTTON_TEXT,
@@ -420,6 +434,15 @@ def recommendations_view():
         playlist_create_dialog(),
     )
 
+def active_device_view() -> rx.Component:
+
+    return rx.text(
+        rx.cond(
+            State.active_device_exists,
+            ACTIVE_DEVICE_NAME_TEXT + State.active_device_name,
+            NO_ACTIVE_DEVICES_TEXT
+        )
+    )
 
 def header_bar() -> rx.Component:
     return rx.center(
@@ -436,6 +459,8 @@ def header_bar() -> rx.Component:
                 ),
                 spacing='0'
             ),
+            rx.spacer(),
+            active_device_view(),
             rx.spacer(),
             rx.button(
                 rx.color_mode_cond(
