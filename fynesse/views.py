@@ -503,5 +503,6 @@ def authenticate_alert() -> rx.Component:
             width='100%'
         ),
         status='error',
-        border_radius='lg'
+        border_radius='lg',
+        z_index=2
     )
