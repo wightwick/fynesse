@@ -459,9 +459,9 @@ def header_bar() -> rx.Component:
                 ),
                 spacing='0'
             ),
-            rx.spacer(),
+            rx.spacer(min_width=10),
             active_device_view(),
-            rx.spacer(),
+            rx.spacer(min_width=10),
             rx.button(
                 rx.color_mode_cond(
                     light=rx.hstack(
