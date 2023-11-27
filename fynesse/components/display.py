@@ -87,12 +87,31 @@ def track_card(
                     padding=1.5
                 ),
                 rx.vstack(
-                    rx.box(
-                        rx.text(
-                            track.track_name,
-                            as_='strong'
+                    rx.hstack(
+                        rx.box(
+                            rx.text(
+                                track.track_name,
+                                as_='strong'
+                            ),
+                            margin_top=0.5,
                         ),
-                        margin_top='0.5'
+                        rx.box(
+                            rx.button(
+                                rx.icon(
+                                    tag='link',
+                                    opacity=0.6
+                                ),
+                                size='xs',
+                                variant='ghost',
+                                on_click=rx.redirect(
+                                    track.album_url,
+                                    external=True
+                                )
+                            ),
+                            padding_top=0.5,
+                            margin_left=-3
+                        ),
+                        spacing='0'
                     ),
                     rx.cond(
                         artists_interactive,
@@ -100,7 +119,7 @@ def track_card(
                             rx.foreach(
                                 track.artist_uris_names,
                                 lambda x: rx.wrap_item(artist_card(x, True))
-                            )
+                            ),
                         ),
                         rx.text(track.artist_names.join(', '))
                     ),
@@ -108,7 +127,7 @@ def track_card(
                         rx.text(
                             track.album_name,
                             as_='small'
-                        )
+                        ),
                     ),
 
                     rx.cond(
@@ -127,7 +146,7 @@ def track_card(
                         ),
                         rx.text('')
                     ),
-
+                    text_align='left',
                     align_items='left',
                 ),
                 rx.spacer(),
@@ -156,11 +175,30 @@ def artist_card_lg(
                     border_radius='md'
                 ),
                 rx.vstack(
-                    rx.box(
-                        rx.text(
-                            artist.artist_name,
+                    rx.hstack(
+                        rx.box(
+                            rx.text(
+                                artist.artist_name,
+                            ),
+                            margin_top=0.5
                         ),
-                        margin_top='0.5'
+                        rx.box(
+                            rx.button(
+                                rx.icon(
+                                    tag='link',
+                                    opacity=0.6
+                                ),
+                                size='xs',
+                                variant='ghost',
+                                on_click=rx.redirect(
+                                    artist.artist_url,
+                                    external=True
+                                )
+                            ),
+                            padding_top=0.5,
+                            margin_left=-3
+                        ),
+                        spacing='0'
                     ),
                     rx.cond(
                         (artist.genres.length() > 0) & show_genres,

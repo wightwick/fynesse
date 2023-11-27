@@ -5,6 +5,7 @@ from .utilities import src_set_from_images_list
 class Artist(rx.Base):
     uri: str
     artist_name: str
+    artist_url: str
     images_srcset: str
     genres: list[str] = []
 
@@ -16,17 +17,15 @@ class Artist(rx.Base):
     def __init__(self, artist_dict):
         uri = artist_dict['uri']
         artist_name = artist_dict['name']
-
+        artist_url = artist_dict['external_urls']['spotify']
         raw_images = artist_dict['images']
-
-        images = [img['url'] for img in raw_images]
-
         images_srcset = src_set_from_images_list(raw_images)
         
         super().__init__(
             uri=uri,
             artist_name=artist_name,
-            images_srcset=images_srcset
+            artist_url=artist_url,
+            images_srcset=images_srcset,
         )
 
 class Track(rx.Base):
@@ -35,6 +34,7 @@ class Track(rx.Base):
     artist_uris_names: list[tuple[str, str]]
     artist_names: list[str]
     album_name: str
+    album_url: str
     album_art: list[str]
     spotify_url: str
     artist_genres: list[str] = []
@@ -91,6 +91,8 @@ class Track(rx.Base):
         album_art = [img['url'] for img in raw_album_art]
 
         album_art_srcset = src_set_from_images_list(raw_album_art)
+
+        album_url = track_dict['album']['external_urls']['spotify']
         
         super().__init__(
             uri=uri,
@@ -99,6 +101,7 @@ class Track(rx.Base):
             artist_names=artist_names,
             album_name=album_name,
             album_art=album_art,
+            album_url=album_url,
             album_art_srcset=album_art_srcset,
             spotify_url=spotify_url,
             added_at=added_at
