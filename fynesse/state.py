@@ -474,10 +474,8 @@ class State(rx.State):
     def add_artist_to_seeds(self, artist_info: list[str]):
         if artist_info[0] not in self.seed_artist_uris:
             self.seed_artists_uris_names = self.seed_artists_uris_names + [artist_info]
-        print(self.seed_artists_uris_names)
 
     def remove_artist_from_seeds_by_uri(self, artist_uri: str):
-        print(self.seed_artists_uris_names)
         self.seed_artists_uris_names = [
             [a[0], a[1]] for a in self.seed_artists_uris_names
             if a[0] != artist_uri
