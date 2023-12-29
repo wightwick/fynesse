@@ -757,7 +757,7 @@ class SearchState(State):
         artist_query_section = f' artist:"{self.search_artist}"'\
             if self.artist_search_enabled and len(self.search_artist) > 0\
             else ''
-        name_query_section = f'track:"{self.search_name}"'\
+        name_query_section = f' track:"{self.search_name}"'\
             if self.name_search_enabled and len(self.search_name) > 0\
             else ''
         genre_query_section = f' genre:"{self.search_genre}"'\
