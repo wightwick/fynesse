@@ -46,6 +46,19 @@ def switchable_text_input(
         width='100%'
     )
 
+def clickable_tooltip(text: str) -> rx.Component:
+    return rx.popover(
+        rx.popover_trigger(
+            rx.icon(
+                tag='question_outline'
+            ),
+        ),
+        rx.popover_content(
+            rx.popover_body(text),
+            rx.popover_close_button(),
+            padding_top=5
+        ),
+    )
 
 def switchable_param_slider(
         param_name: str,
@@ -71,9 +84,8 @@ def switchable_param_slider(
                     ),
                     rx.text(param_name, as_='b'),
                 ),
-                rx.tooltip(
-                    rx.icon(tag='question_outline'),
-                    label=hint,
+                clickable_tooltip(
+                    hint,
                 ),
                 rx.switch(
                     is_checked=enabled_var,

@@ -387,10 +387,7 @@ def recommendations_view():
                                 TARGET_TEMPO_INPUT_TEXT,
                                 as_='b'
                             ),
-                            rx.tooltip(
-                                rx.icon(tag='question_outline'),
-                                label=TARGET_TEMPO_DESC_TEXT,
-                            ),
+                            clickable_tooltip(TARGET_TEMPO_DESC_TEXT),
                             rx.switch(
                                 is_checked=State.recc_target_tempo_enabled,
                                 on_change=State.enable_disable_recc_target_tempo,
@@ -419,9 +416,8 @@ def recommendations_view():
                                 TEMPO_RANGE_INPUT_NAME,
                                 as_='b'
                             ),
-                            rx.tooltip(
-                                rx.icon(tag='question_outline'),
-                                label=TEMPO_RANGE_DESC_TEXT,
+                            clickable_tooltip(
+                                TEMPO_RANGE_DESC_TEXT,
                             ),
                             rx.switch(
                                 is_checked=State.recc_tempo_range_enabled,
