@@ -8,7 +8,7 @@ from ..state import State
 
 import reflex as rx
 
-def switchable_input_field(
+def switchable_text_input(
         name: str,
         value: callable,
         on_change: callable,
@@ -50,9 +50,13 @@ def switchable_input_field(
 def switchable_param_slider(
         param_name: str,
         # initial_value: rx.var,
-        state_value_setter: callable,
-        state_enabled_var: callable,
-        state_enable_disable_fn: callable
+        value_setter: callable,
+        enabled_var: callable,
+        enable_disable_fn: callable,
+        value: rx.var,
+        hint: str = None,
+        min_val: int = 0,
+        max_val: int = 100
     ) -> rx.Component:
     """Slider with a title displayed above it and a switch
     to enable/disable it
@@ -60,10 +64,20 @@ def switchable_param_slider(
     return rx.box(
         rx.vstack(
             rx.hstack(
-                rx.text(param_name, as_='b'),
+                rx.cond(enabled_var,
+                    rx.hstack(
+                        rx.text(param_name + ':', as_='b'),
+                        rx.text(value),
+                    ),
+                    rx.text(param_name, as_='b'),
+                ),
+                rx.tooltip(
+                    rx.icon(tag='question_outline'),
+                    label=hint,
+                ),
                 rx.switch(
-                    is_checked=state_enabled_var,
-                    on_change=state_enable_disable_fn,
+                    is_checked=enabled_var,
+                    on_change=enable_disable_fn,
                     color_scheme='green'
                 )
 
@@ -71,10 +85,10 @@ def switchable_param_slider(
             rx.slider(
                     # value=initial_value,
                     default_value=0,
-                    is_disabled=~state_enabled_var,
-                    on_change_end=state_value_setter,
-                    min_=0,
-                    max_=100,
+                    is_disabled=~enabled_var,
+                    on_change_end=value_setter,
+                    min_=min_val,
+                    max_=max_val,
                     color_scheme='green',
             ),
             align_items='left'

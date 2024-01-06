@@ -186,6 +186,16 @@ class State(rx.State):
     def set_recc_target_instrumentalness_value(self, value: int):
         self.recc_target_instrumentalness_value = value / 100
 
+    recc_target_tempo_value: int = 140
+    recc_target_tempo_enabled: bool = False
+    def enable_disable_recc_target_tempo(self, enabled: bool):
+        self.recc_target_tempo_enabled = enabled
+    def set_recc_target_tempo_value(self, value: str):
+        tempo = ''.join(c for c in value if c.isdigit())
+        if len(tempo) == 0: 
+            tempo = '0'
+        self.recc_target_tempo_value = int(tempo)
+    
     num_recommendations: int = NUM_RECCOMENDATIONS_DEFAULT
     
     #### LIBRARY FROM API
@@ -399,7 +409,8 @@ class State(rx.State):
                 if self.recc_target_danceability_enabled else None,
             'target_instrumentalness': self.recc_target_instrumentalness_value \
                 if self.recc_target_instrumentalness_enabled else None,
-
+            'target_tempo': self.recc_target_tempo_value \
+                if self.recc_target_tempo_enabled else None,
         }
         
         ic(

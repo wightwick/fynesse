@@ -156,28 +156,28 @@ def search_view():
                         padding_left=1,
                         padding_right=5,
                     ),
-                    switchable_input_field(
+                    switchable_text_input(
                         name=SEARCH_ARTIST_FIELD_TEXT,
                         value=SearchState.search_artist,
                         on_change=SearchState.set_search_artist,
                         state_enabled_var=SearchState.artist_search_enabled,
                         state_toggle_fn=SearchState.toggle_artist_search,
                     ),
-                    switchable_input_field(
+                    switchable_text_input(
                         name=SEARCH_TRACK_FIELD_TEXT,
                         value=SearchState.search_name,
                         on_change=SearchState.set_search_name,
                         state_enabled_var=SearchState.name_search_enabled,
                         state_toggle_fn=SearchState.toggle_name_search,
                     ),
-                    switchable_input_field(
+                    switchable_text_input(
                         name=SEARCH_GENRE_FIELD_TEXT,
                         value=SearchState.search_genre,
                         on_change=SearchState.set_search_genre,
                         state_enabled_var=SearchState.genre_search_enabled,
                         state_toggle_fn=SearchState.toggle_genre_search,
                     ),
-                    switchable_input_field(
+                    switchable_text_input(
                         name=SEARCH_YEAR_FIELD_TEXT,
                         value=SearchState.search_year,
                         on_change=SearchState.set_search_year,
@@ -238,7 +238,12 @@ def search_view():
 def seeds_list() -> rx.Component:
     return rx.box(
             rx.cond(State.too_few_seeds,
-                hint_text(PLANT_SEEDS_HINT_TEXT),
+                rx.center(
+                    rx.hstack(
+                        hint_text(PLANT_SEEDS_HINT_TEXT),
+                        rx.text('🌱', opacity=0.7)
+                    ),
+                ),
                 rx.vstack(
                     rx.vstack(
                         rx.foreach(
@@ -330,34 +335,108 @@ def recommendations_view():
                 children=rx.vstack(
                     switchable_param_slider(
                         TARGET_ACOUSTICNESS_SLIDER_TEXT,
-                        state_value_setter=State.set_recc_target_acousticness_value,
-                        state_enabled_var=State.recc_target_acousticness_enabled,
-                        state_enable_disable_fn=State.enable_disable_recc_target_acousticness
+                        value_setter=State.set_recc_target_acousticness_value,
+                        enabled_var=State.recc_target_acousticness_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_acousticness,
+                        value=State.recc_target_acousticness_value,
+                        hint=ACOUSTICNESS_DESC_TEXT
                     ),
                     switchable_param_slider(
                         TARGET_ENERGY_SLIDER_TEXT,
-                        state_value_setter=State.set_recc_target_energy_value,
-                        state_enabled_var=State.recc_target_energy_enabled,
-                        state_enable_disable_fn=State.enable_disable_recc_target_energy
+                        value_setter=State.set_recc_target_energy_value,
+                        enabled_var=State.recc_target_energy_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_energy,
+                        value=State.recc_target_energy_value,
+                        hint=ENERGY_DESC_TEXT
                     ),
                     switchable_param_slider(
                         TARGET_LIVENESS_SLIDER_TEXT,
-                        state_value_setter=State.set_recc_target_liveness_value,
-                        state_enabled_var=State.recc_target_liveness_enabled,
-                        state_enable_disable_fn=State.enable_disable_recc_target_liveness
+                        value_setter=State.set_recc_target_liveness_value,
+                        enabled_var=State.recc_target_liveness_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_liveness,
+                        value=State.recc_target_liveness_value,
+                        hint=LIVENESS_DESC_TEXT
                     ),
                     switchable_param_slider(
                         TARGET_DANCEABILITY_SLIDER_TEXT,
-                        state_value_setter=State.set_recc_target_danceability_value,
-                        state_enabled_var=State.recc_target_danceability_enabled,
-                        state_enable_disable_fn=State.enable_disable_recc_target_danceability
+                        value_setter=State.set_recc_target_danceability_value,
+                        enabled_var=State.recc_target_danceability_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_danceability,
+                        value=State.recc_target_danceability_value,
+                        hint=DANCEABILITY_DESC_TEXT
                     ),
                     switchable_param_slider(
                         TARGET_INSTRUMENTALNESS_SLIDER_TEXT,
-                        state_value_setter=State.set_recc_target_instrumentalness_value,
-                        state_enabled_var=State.recc_target_instrumentalness_enabled,
-                        state_enable_disable_fn=State.enable_disable_recc_target_instrumentalness
+                        value_setter=State.set_recc_target_instrumentalness_value,
+                        enabled_var=State.recc_target_instrumentalness_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_instrumentalness,
+                        value=State.recc_target_instrumentalness_value,
+                        hint=INSTRUMENTALNESS_DESC_TEXT
                     ),
+                    rx.flex(
+                        rx.hstack(
+                        rx.text(
+                                TARGET_TEMPO_INPUT_TEXT,
+                                as_='b'
+                            ),
+                            rx.switch(
+                                is_checked=State.recc_target_tempo_enabled,
+                                on_change=State.enable_disable_recc_target_tempo,
+                                color_scheme='green'
+                            ),
+                        ),
+                        rx.spacer(),
+                        rx.debounce_input(
+                            rx.input(
+                                value=State.recc_target_tempo_value.to_string(),
+                                on_change=State.set_recc_target_tempo_value,
+                                type_='number',
+                                width='4em',
+                                is_disabled=~State.recc_target_tempo_enabled,
+                            ),
+                            debounce_timeout=300
+                        ),
+                        text_align='left',
+                        align='center',
+                        width='100%'
+                    ),
+                    # rx.debounce_input(
+                    #     rx.input(
+                    #         value=value,
+                    #         on_change=on_change,
+                    #         is_disabled=~state_enabled_var,
+                    #     ),
+                    #     debounce_timeout=300
+                    # ),
+
+                    # switchable_param_slider(
+                    #     TARGET_TEMPO_INPUT_NAME,
+                    #     state_value_setter=State.set_recc_tempo_value,
+                    #     state_enabled_var=State.recc_tempo_enabled,
+                    #     state_enable_disable_fn=State.enable_disable_recc_tempo,
+                    #     hint=TEMPO_DESC_TEXT,
+                    #     min_val=0,
+                    #     max_val=250
+                    # ),
+                    # rx.box(
+                    #     rx.debounce_input(
+
+                    #         rx.number_input(
+                    #             default_value=140,
+                    #             on_change=State.set_recc_tempo_value,
+                    #             allow_mouse_wheel=True
+                    #         ),
+                    #         debounce_timeout=300
+                    #     ),
+                    # ),
+                    # switchable_number_input(
+                    #     TARGET_TEMPO_INPUT_NAME,
+                    #     value=State.recc_tempo_value,
+                    #     on_change=State.set_recc_tempo_value,
+                    #     state_toggle_fn=State.enable_disable_recc_tempo,
+                    #     state_enabled_var=State.recc_tempo_enabled
+                    # ),
+
                     param_slider(
                         text=f'{NUM_RECOMMENDED_TRACKS_SLIDER_TEXT}{State.num_recommendations}',
                         on_change=State.set_num_recommendations,

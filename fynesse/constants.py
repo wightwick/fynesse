@@ -65,7 +65,16 @@ TARGET_ENERGY_SLIDER_TEXT = 'target energy'
 TARGET_LIVENESS_SLIDER_TEXT = 'target liveness'
 TARGET_DANCEABILITY_SLIDER_TEXT = 'target danceability'
 TARGET_INSTRUMENTALNESS_SLIDER_TEXT = 'target instrumentalness'
+TARGET_TEMPO_INPUT_TEXT = 'target tempo (bpm)'
+
 NUM_RECOMMENDED_TRACKS_SLIDER_TEXT = 'number of recommended tracks: '
+
+ACOUSTICNESS_DESC_TEXT = 'A confidence measure from 0.0 to 1.0 of whether the track is acoustic.'
+ENERGY_DESC_TEXT = 'Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.'
+LIVENESS_DESC_TEXT = 'Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.'
+DANCEABILITY_DESC_TEXT = 'Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.'
+INSTRUMENTALNESS_DESC_TEXT = 'Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.'
+TEMPO_DESC_TEXT = 'Track tempo (BPM)'
 
 SEARCH_RESULTS_TYPE_RADIO_TEXT = 'results type:'
 SEARCH_ARTIST_FIELD_TEXT = 'artist'
