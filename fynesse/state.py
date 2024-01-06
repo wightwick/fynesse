@@ -186,6 +186,13 @@ class State(rx.State):
     def set_recc_target_instrumentalness_value(self, value: int):
         self.recc_target_instrumentalness_value = value / 100
 
+    recc_target_valence_value: float = 0
+    recc_target_valence_enabled: bool = False
+    def enable_disable_recc_target_valence(self, enabled: bool):
+        self.recc_target_valence_enabled = enabled
+    def set_recc_target_valence_value(self, value: int):
+        self.recc_target_valence_value = value / 100
+
     recc_target_tempo_value: int = 140
     recc_target_tempo_enabled: bool = False
     def enable_disable_recc_target_tempo(self, enabled: bool):
@@ -196,6 +203,24 @@ class State(rx.State):
             tempo = '0'
         self.recc_target_tempo_value = int(tempo)
     
+
+    # recc_tempo_range_value: list[int] = [100, 180]
+    recc_min_tempo_value: int = 90
+    recc_max_tempo_value: int = 180
+    recc_tempo_range_enabled: bool = False
+    def enable_disable_recc_tempo_range(self, enabled: bool):
+        self.recc_tempo_range_enabled = enabled
+    def set_recc_min_tempo_value(self, value: str):
+        tempo = ''.join(c for c in value if c.isdigit())
+        if len(tempo) == 0: 
+            tempo = '0'
+        self.recc_min_tempo_value = int(tempo)
+    def set_recc_max_tempo_value(self, value: str):
+        tempo = ''.join(c for c in value if c.isdigit())
+        if len(tempo) == 0: 
+            tempo = '0'
+        self.recc_max_tempo_value = int(tempo)
+
     num_recommendations: int = NUM_RECCOMENDATIONS_DEFAULT
     
     #### LIBRARY FROM API
@@ -409,8 +434,14 @@ class State(rx.State):
                 if self.recc_target_danceability_enabled else None,
             'target_instrumentalness': self.recc_target_instrumentalness_value \
                 if self.recc_target_instrumentalness_enabled else None,
+            'target_valence': self.recc_target_valence_value \
+                if self.recc_target_valence_enabled else None,
             'target_tempo': self.recc_target_tempo_value \
                 if self.recc_target_tempo_enabled else None,
+            'min_tempo': self.recc_min_tempo_value \
+                if self.recc_tempo_range_enabled else None,
+            'max_tempo': self.recc_max_tempo_value \
+                if self.recc_tempo_range_enabled else None,
         }
         
         ic(

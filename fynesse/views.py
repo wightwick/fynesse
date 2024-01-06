@@ -373,11 +373,23 @@ def recommendations_view():
                         value=State.recc_target_instrumentalness_value,
                         hint=INSTRUMENTALNESS_DESC_TEXT
                     ),
+                    switchable_param_slider(
+                        TARGET_VALENCE_SLIDER_TEXT,
+                        value_setter=State.set_recc_target_valence_value,
+                        enabled_var=State.recc_target_valence_enabled,
+                        enable_disable_fn=State.enable_disable_recc_target_valence,
+                        value=State.recc_target_valence_value,
+                        hint=VALENCE_DESC_TEXT
+                    ),
                     rx.flex(
                         rx.hstack(
-                        rx.text(
+                            rx.text(
                                 TARGET_TEMPO_INPUT_TEXT,
                                 as_='b'
+                            ),
+                            rx.tooltip(
+                                rx.icon(tag='question_outline'),
+                                label=TARGET_TEMPO_DESC_TEXT,
                             ),
                             rx.switch(
                                 is_checked=State.recc_target_tempo_enabled,
@@ -394,48 +406,57 @@ def recommendations_view():
                                 width='4em',
                                 is_disabled=~State.recc_target_tempo_enabled,
                             ),
-                            debounce_timeout=300
+                            debounce_timeout=500
                         ),
                         text_align='left',
                         align='center',
                         width='100%'
                     ),
-                    # rx.debounce_input(
-                    #     rx.input(
-                    #         value=value,
-                    #         on_change=on_change,
-                    #         is_disabled=~state_enabled_var,
-                    #     ),
-                    #     debounce_timeout=300
-                    # ),
 
-                    # switchable_param_slider(
-                    #     TARGET_TEMPO_INPUT_NAME,
-                    #     state_value_setter=State.set_recc_tempo_value,
-                    #     state_enabled_var=State.recc_tempo_enabled,
-                    #     state_enable_disable_fn=State.enable_disable_recc_tempo,
-                    #     hint=TEMPO_DESC_TEXT,
-                    #     min_val=0,
-                    #     max_val=250
-                    # ),
-                    # rx.box(
-                    #     rx.debounce_input(
-
-                    #         rx.number_input(
-                    #             default_value=140,
-                    #             on_change=State.set_recc_tempo_value,
-                    #             allow_mouse_wheel=True
-                    #         ),
-                    #         debounce_timeout=300
-                    #     ),
-                    # ),
-                    # switchable_number_input(
-                    #     TARGET_TEMPO_INPUT_NAME,
-                    #     value=State.recc_tempo_value,
-                    #     on_change=State.set_recc_tempo_value,
-                    #     state_toggle_fn=State.enable_disable_recc_tempo,
-                    #     state_enabled_var=State.recc_tempo_enabled
-                    # ),
+                    rx.flex(
+                        rx.hstack(
+                        rx.text(
+                                TEMPO_RANGE_INPUT_NAME,
+                                as_='b'
+                            ),
+                            rx.tooltip(
+                                rx.icon(tag='question_outline'),
+                                label=TEMPO_RANGE_DESC_TEXT,
+                            ),
+                            rx.switch(
+                                is_checked=State.recc_tempo_range_enabled,
+                                on_change=State.enable_disable_recc_tempo_range,
+                                color_scheme='green'
+                            ),
+                        ),
+                        rx.spacer(),
+                        rx.hstack(
+                            rx.debounce_input(
+                                rx.input(
+                                    value=State.recc_min_tempo_value.to_string(),
+                                    on_change=State.set_recc_min_tempo_value,
+                                    type_='number',
+                                    width='4em',
+                                    is_disabled=~State.recc_tempo_range_enabled,
+                                ),
+                                debounce_timeout=500
+                            ),
+                            rx.text('-'),
+                            rx.debounce_input(
+                                rx.input(
+                                    value=State.recc_max_tempo_value.to_string(),
+                                    on_change=State.set_recc_max_tempo_value,
+                                    type_='number',
+                                    width='4em',
+                                    is_disabled=~State.recc_tempo_range_enabled,
+                                ),
+                                debounce_timeout=500
+                            ),
+                        ),
+                        text_align='left',
+                        align='center',
+                        width='100%'
+                    ),
 
                     param_slider(
                         text=f'{NUM_RECOMMENDED_TRACKS_SLIDER_TEXT}{State.num_recommendations}',
@@ -444,7 +465,6 @@ def recommendations_view():
                         min_max=[1,100]
                     )
                 ),
-
                 heading=PARAMETERS_SUB_PANE_HEADER_TEXT
             ),
             pane_button(
@@ -496,7 +516,7 @@ def recommendations_view():
                         ),
                         width='100%'
                     ),
-                    heading=RESULTS_SUB_PANE_HEADER_TEXT,
+                    heading=RECC_TRACKS_SUB_PANE_HEADER_TEXT,
                     border_color=SPOTIFY_GREEN,
                 ),
                 sub_pane(
@@ -505,7 +525,7 @@ def recommendations_view():
                         hint_text(GERMINATE_HINT),
                         rx.text('')
                     ),
-                    heading=RESULTS_SUB_PANE_HEADER_TEXT,
+                    heading=RECC_TRACKS_SUB_PANE_HEADER_TEXT,
                 ),
             ),
             min_width=320

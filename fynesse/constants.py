@@ -35,6 +35,8 @@ RECOMMENDATIONS_PANE_HEADER_TEXT = 'recommendations'
 SEARCH_PANE_HEADER_TEXT = 'search'
 
 RESULTS_SUB_PANE_HEADER_TEXT = 'results'
+RECC_TRACKS_SUB_PANE_HEADER_TEXT = 'recommended tunes'
+
 SEEDS_SUB_PANE_HEADER_TEXT = 'seeds'
 TOO_MANY_SEEDS_HEADER_TEXT = '5 seeds max'
 PARAMETERS_SUB_PANE_HEADER_TEXT = 'parameters'
@@ -65,7 +67,9 @@ TARGET_ENERGY_SLIDER_TEXT = 'target energy'
 TARGET_LIVENESS_SLIDER_TEXT = 'target liveness'
 TARGET_DANCEABILITY_SLIDER_TEXT = 'target danceability'
 TARGET_INSTRUMENTALNESS_SLIDER_TEXT = 'target instrumentalness'
-TARGET_TEMPO_INPUT_TEXT = 'target tempo (bpm)'
+TARGET_VALENCE_SLIDER_TEXT = 'target valence (happiness)'
+TARGET_TEMPO_INPUT_TEXT = 'target tempo'
+TEMPO_RANGE_INPUT_NAME = 'tempo range'
 
 NUM_RECOMMENDED_TRACKS_SLIDER_TEXT = 'number of recommended tracks: '
 
@@ -74,7 +78,10 @@ ENERGY_DESC_TEXT = 'Energy is a measure from 0.0 to 1.0 and represents a percept
 LIVENESS_DESC_TEXT = 'Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.'
 DANCEABILITY_DESC_TEXT = 'Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.'
 INSTRUMENTALNESS_DESC_TEXT = 'Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.'
-TEMPO_DESC_TEXT = 'Track tempo (BPM)'
+VALENCE_DESC_TEXT = 'A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).'
+TARGET_TEMPO_DESC_TEXT = 'Track tempo (BPM) to target in recommendations'
+TEMPO_RANGE_DESC_TEXT = 'Hard limits on the minimum and maximum track tempo (BPM) of recommendations'
+
 
 SEARCH_RESULTS_TYPE_RADIO_TEXT = 'results type:'
 SEARCH_ARTIST_FIELD_TEXT = 'artist'
