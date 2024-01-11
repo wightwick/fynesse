@@ -30,6 +30,8 @@ APP_DESCRIPTION = 'Finesse your Spotify recommendations'
 ACTIVE_DEVICE_NAME_TEXT = 'playback device: '
 NO_ACTIVE_DEVICES_TEXT = 'no active devices for playback'
 
+ACTIVE_DEVICE_REQUIRED_POPOVER_TEXT = 'active spotify device required to play multiple tracks'
+
 LIBRARY_PANE_HEADER_TEXT = 'library'
 RECOMMENDATIONS_PANE_HEADER_TEXT = 'recommendations'
 SEARCH_PANE_HEADER_TEXT = 'search'

@@ -486,7 +486,7 @@ def recommendations_view():
                                         )
                                     ),
                                     rx.popover_content(
-                                        rx.popover_header("active spotify device required to play multiple tracks"),
+                                        rx.popover_header(ACTIVE_DEVICE_REQUIRED_POPOVER_TEXT),
                                         rx.popover_close_button(),
                                     ),
                                 )

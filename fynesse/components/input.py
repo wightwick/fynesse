@@ -62,7 +62,6 @@ def clickable_tooltip(text: str) -> rx.Component:
 
 def switchable_param_slider(
         param_name: str,
-        # initial_value: rx.var,
         value_setter: callable,
         enabled_var: callable,
         enable_disable_fn: callable,
