@@ -1,3 +1,3 @@
 SPOTIFY_CLIENT_ID = ''    
 SPOTIFY_CLIENT_SECRET = ''
-SPOTIFY_REDIRECT_URI = 'https://localhost:1234'
+SPOTIFY_REDIRECT_URI = 'http://localhost:3000'
