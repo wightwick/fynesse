@@ -18,24 +18,24 @@ def switchable_text_input(
     """Input field with a title displayed above uit and a switch to
     enable/disable it
     """ 
-    return rx.vstack(
-        rx.text(
+    return rx.chakra.vstack(
+        rx.chakra.text(
             name,
             margin_bottom=-3.5,
             margin_left=1,
             opacity=rx.cond(state_enabled_var, 1, 0.3),
             z_index=2,
         ),
-        rx.hstack(
+        rx.chakra.hstack(
             rx.debounce_input(
-                rx.input(
+                rx.chakra.input(
                     value=value,
                     on_change=on_change,
                     is_disabled=~state_enabled_var,
                 ),
                 debounce_timeout=300
             ),
-            rx.switch(
+            rx.chakra.switch(
                 is_checked=state_enabled_var,
                 on_change=state_toggle_fn,
                 color_scheme='green'
@@ -47,15 +47,15 @@ def switchable_text_input(
     )
 
 def clickable_tooltip(text: str) -> rx.Component:
-    return rx.popover(
-        rx.popover_trigger(
-            rx.icon(
+    return rx.chakra.popover(
+        rx.chakra.popover_trigger(
+            rx.chakra.icon(
                 tag='question_outline'
             ),
         ),
-        rx.popover_content(
-            rx.popover_body(text),
-            rx.popover_close_button(),
+        rx.chakra.popover_content(
+            rx.chakra.popover_body(text),
+            rx.chakra.popover_close_button(),
             padding_top=5
         ),
     )
@@ -73,27 +73,27 @@ def switchable_param_slider(
     """Slider with a title displayed above it and a switch
     to enable/disable it
     """
-    return rx.box(
-        rx.vstack(
-            rx.hstack(
+    return rx.chakra.box(
+        rx.chakra.vstack(
+            rx.chakra.hstack(
                 rx.cond(enabled_var,
-                    rx.hstack(
-                        rx.text(param_name + ':', as_='b'),
-                        rx.text(value),
+                    rx.chakra.hstack(
+                        rx.chakra.text(param_name + ':', as_='b'),
+                        rx.chakra.text(value),
                     ),
-                    rx.text(param_name, as_='b'),
+                    rx.chakra.text(param_name, as_='b'),
                 ),
                 clickable_tooltip(
                     hint,
                 ),
-                rx.switch(
+                rx.chakra.switch(
                     is_checked=enabled_var,
                     on_change=enable_disable_fn,
                     color_scheme='green'
                 )
 
             ),
-            rx.slider(
+            rx.chakra.slider(
                     # value=initial_value,
                     default_value=0,
                     is_disabled=~enabled_var,
@@ -115,13 +115,13 @@ def param_slider(
         min_max: list[int]
     ) -> rx.Component:
     """Slider with a title displayed above it"""
-    return rx.box(
-        rx.vstack(
-            rx.text(
+    return rx.chakra.box(
+        rx.chakra.vstack(
+            rx.chakra.text(
                 text,
                 as_='b'
             ),
-            rx.slider(
+            rx.chakra.slider(
                     default_value=default_value,
                     on_change_end=on_change,
                     min_=min_max[0],
@@ -135,10 +135,10 @@ def param_slider(
 
 
 def track_queue_button(track: Track) -> rx.Component:
-    return rx.button(
-        rx.vstack(
-            rx.icon(tag='small_add'),
-            rx.icon(tag='hamburger'),
+    return rx.chakra.button(
+        rx.chakra.vstack(
+            rx.chakra.icon(tag='small_add'),
+            rx.chakra.icon(tag='hamburger'),
             spacing='-1'
         ),
         on_click=State.queue_track_uri(track.uri),
@@ -146,17 +146,17 @@ def track_queue_button(track: Track) -> rx.Component:
 
 
 def track_play_button(track: Track) -> rx.Component:
-    icon = rx.box(
-        rx.icon(tag='triangle_down'),
+    icon = rx.chakra.box(
+        rx.chakra.icon(tag='triangle_down'),
         transform='rotate(-90deg)'
     )
     return rx.cond(
         State.active_device_exists,
-        rx.button(
+        rx.chakra.button(
             icon,
             on_click=State.play_track_uris([track.uri]),
         ),
-        rx.button(
+        rx.chakra.button(
             icon,
             on_click=rx.redirect(track.spotify_url, external=True)
         )
@@ -164,7 +164,7 @@ def track_play_button(track: Track) -> rx.Component:
 
 
 def track_add_seed_button(track: Track, source: str) -> rx.Component:
-    return rx.button(
+    return rx.chakra.button(
         '🌱',
         on_click=State.add_track_uri_to_seeds(track.uri, source),
         is_disabled=State.seed_track_uris.contains(track.uri),
@@ -173,31 +173,31 @@ def track_add_seed_button(track: Track, source: str) -> rx.Component:
 
 def track_multi_button(track: Track) -> rx.Component:
     """Button to show popover with options to add seed, play, queue"""
-    return rx.popover(
-        rx.popover_trigger(
-            rx.button(
-                rx.icon(tag='triangle_down'),
+    return rx.chakra.popover(
+        rx.chakra.popover_trigger(
+            rx.chakra.button(
+                rx.chakra.icon(tag='triangle_down'),
                 # on_click=State.queue_track_uri(track.uri),
             )
         ),
-        rx.popover_content(
-            rx.popover_header(height=8),
-            rx.popover_body(
-                rx.vstack(
+        rx.chakra.popover_content(
+            rx.chakra.popover_header(height=8),
+            rx.chakra.popover_body(
+                rx.chakra.vstack(
                     track_add_seed_button(track, source='search'),
                     track_play_button(track),
                     track_queue_button(track),
                 )
             ),
-            rx.popover_close_button(),
+            rx.chakra.popover_close_button(),
             width='30'
         ),
     )
 
 
 def track_remove_seed_button(track: Track) -> rx.Component:
-    return rx.button(
-        rx.icon(tag="minus"),
+    return rx.chakra.button(
+        rx.chakra.icon(tag="minus"),
         on_click=State.remove_track_uri_from_seeds(track.uri),
     )
 
@@ -207,7 +207,7 @@ def pane_button(
         **kwargs
 ) -> rx.Component:
     """Button with larger corner radius styled for use in a pane"""
-    return rx.button(
+    return rx.chakra.button(
         text,
         width='100%',
         border_radius='xl',
@@ -220,8 +220,8 @@ def sub_pane_button(
         **kwargs
     ) -> rx.Component:
     """Button with smaller corner radius styled for use in a sub pane"""
-    return rx.button(
-        rx.text(text),
+    return rx.chakra.button(
+        rx.chakra.text(text),
         size='md',
         width='100%',
         **kwargs

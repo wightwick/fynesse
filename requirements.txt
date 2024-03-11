@@ -1,4 +1,6 @@
-icecream==2.1.3
-reflex==0.3.8
-Requests==2.31.0
-spotipy==2.23.0
+icecream
+reflex
+Requests
+spotipy
+black
+python-dotenv

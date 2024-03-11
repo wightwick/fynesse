@@ -10,13 +10,13 @@ import reflex as rx
 
 
 def top_tracks_panel() -> rx.Component:
-    return rx.vstack(
+    return rx.chakra.vstack(
         sub_pane_button(
             text=ARTIST_GENRES_BUTTON_TEXT,
             on_click=State.fetch_genres_top_tracks,
             is_disabled=State.top_tracks_have_genre,
         ),
-        rx.vstack(
+        rx.chakra.vstack(
             rx.foreach(
                 State.top_tracks,
                 lambda x: track_card(
@@ -32,9 +32,9 @@ def top_tracks_panel() -> rx.Component:
 
 
 def playlist_browser_panel() -> rx.Component:
-    return rx.vstack(
-        rx.hstack(
-            rx.select(
+    return rx.chakra.vstack(
+        rx.chakra.hstack(
+            rx.chakra.select(
                 State.playlist_names,
                 on_change=State.select_playlist,
             ),
@@ -59,13 +59,13 @@ def playlist_browser_panel() -> rx.Component:
 
 
 def liked_songs_view_panel() -> rx.Component:
-    return rx.vstack(
+    return rx.chakra.vstack(
         sub_pane_button(
             text=ARTIST_GENRES_BUTTON_TEXT,
             on_click=State.fetch_genres_liked,
             is_disabled=State.liked_tracks_have_genre,
         ),
-        rx.vstack(
+        rx.chakra.vstack(
             rx.foreach(
                 State.liked_tracks,
                 lambda x: track_card(
@@ -82,13 +82,13 @@ def liked_songs_view_panel() -> rx.Component:
 
 
 def recent_tracks_panel() -> rx.Component:
-    return rx.vstack(
+    return rx.chakra.vstack(
         sub_pane_button(
             text=ARTIST_GENRES_BUTTON_TEXT,
             on_click=State.fetch_genres_recent_tracks,
             is_disabled=State.recent_tracks_have_genre,
         ),
-        rx.vstack(
+        rx.chakra.vstack(
             rx.foreach(
                 State.recent_tracks,
                 lambda x: track_card(
@@ -104,25 +104,25 @@ def recent_tracks_panel() -> rx.Component:
 
 
 def library_view() -> rx.Component:
-    tabs = rx.tabs(
-        rx.tab_list(
-            rx.tab(LIKED_SONGS_TAB_NAME_TEXT),
-            rx.tab(PLAYLIST_TAB_NAME_TEXT),
-            rx.tab(RECENTLY_PLAYED_TAB_NAME_TEXT),
-            rx.tab(TOP_TAB_NAME_TEXT),
+    tabs = rx.chakra.tabs(
+        rx.chakra.tab_list(
+            rx.chakra.tab(LIKED_SONGS_TAB_NAME_TEXT),
+            rx.chakra.tab(PLAYLIST_TAB_NAME_TEXT),
+            rx.chakra.tab(RECENTLY_PLAYED_TAB_NAME_TEXT),
+            rx.chakra.tab(TOP_TAB_NAME_TEXT),
             # spacing=10
         ),
-        rx.tab_panels(
-            rx.tab_panel(liked_songs_view_panel()),
-            rx.tab_panel(playlist_browser_panel()),
-            rx.tab_panel(recent_tracks_panel()),
-            rx.tab_panel(top_tracks_panel())
+        rx.chakra.tab_panels(
+            rx.chakra.tab_panel(liked_songs_view_panel()),
+            rx.chakra.tab_panel(playlist_browser_panel()),
+            rx.chakra.tab_panel(recent_tracks_panel()),
+            rx.chakra.tab_panel(top_tracks_panel())
         ),
         color_scheme='green',
         align='center'
     )
 
-    return rx.box(
+    return rx.chakra.box(
         tabs,
         width='100%',
         min_width=370
@@ -130,18 +130,18 @@ def library_view() -> rx.Component:
 
 
 def search_view():
-    return rx.vstack(
+    return rx.chakra.vstack(
         sub_pane(
-            rx.box(
-                rx.vstack(
-                    rx.hstack(
-                        rx.text(SEARCH_RESULTS_TYPE_RADIO_TEXT),
-                        rx.spacer(),
-                        rx.radio_group(
-                            rx.hstack(
+            rx.chakra.box(
+                rx.chakra.vstack(
+                    rx.chakra.hstack(
+                        rx.chakra.text(SEARCH_RESULTS_TYPE_RADIO_TEXT),
+                        rx.chakra.spacer(),
+                        rx.chakra.radio_group(
+                            rx.chakra.hstack(
                                 rx.foreach(
                                     SEARCH_RESULTS_TYPE_OPTIONS,
-                                    lambda option: rx.radio(
+                                    lambda option: rx.chakra.radio(
                                         option,
                                         color_scheme='green'
                                     ),
@@ -197,7 +197,7 @@ def search_view():
         rx.cond(
             SearchState.results_fetched,
             sub_pane(
-                rx.vstack(
+                rx.chakra.vstack(
                     rx.cond(
                         SearchState.search_results_type == SEARCH_RESULTS_TYPE_TRACKS,
                         rx.foreach(
@@ -212,7 +212,7 @@ def search_view():
                                 ]
                             )
                         ),
-                        rx.vstack(
+                        rx.chakra.vstack(
                             rx.foreach(
                                 SearchState.artist_results,
                                 lambda x: artist_card_lg(x, show_genres=True)
@@ -236,16 +236,16 @@ def search_view():
 
 
 def seeds_list() -> rx.Component:
-    return rx.box(
+    return rx.chakra.box(
             rx.cond(State.too_few_seeds,
-                rx.center(
-                    rx.hstack(
+                rx.chakra.center(
+                    rx.chakra.hstack(
                         hint_text(PLANT_SEEDS_HINT_TEXT),
-                        rx.text('🌱', opacity=0.7)
+                        rx.chakra.text('🌱', opacity=0.7)
                     ),
                 ),
-                rx.vstack(
-                    rx.vstack(
+                rx.chakra.vstack(
+                    rx.chakra.vstack(
                         rx.foreach(
                             State.seed_tracks,
                             lambda x: track_card(
@@ -257,7 +257,7 @@ def seeds_list() -> rx.Component:
                         ),
                         width='100%'
                     ),
-                    rx.vstack(
+                    rx.chakra.vstack(
                         rx.foreach(
                             State.seed_artists_uris_names,
                             lambda x: artist_card(x, False)
@@ -274,7 +274,7 @@ def seeds_view() -> rx.Component:
             State.too_many_seeds,
             sub_pane(
                 children=seeds_list(),
-                heading=rx.text(TOO_MANY_SEEDS_HEADER_TEXT, color=SUB_PANE_WARNING_RED),
+                heading=rx.chakra.text(TOO_MANY_SEEDS_HEADER_TEXT, color=SUB_PANE_WARNING_RED),
                 border_color=SUB_PANE_WARNING_RED
             ),
             sub_pane(
@@ -286,36 +286,36 @@ def seeds_view() -> rx.Component:
 
 
 def playlist_create_dialog():
-    return rx.alert_dialog(
-        rx.alert_dialog_overlay(
-            rx.alert_dialog_content(
-                rx.hstack(
-                    rx.box(
-                        rx.alert_dialog_header(
+    return rx.chakra.alert_dialog(
+        rx.chakra.alert_dialog_overlay(
+            rx.chakra.alert_dialog_content(
+                rx.chakra.hstack(
+                    rx.chakra.box(
+                        rx.chakra.alert_dialog_header(
                             PLAYLIST_CREATE_DIALOG_HEADER_TEXT,
                         ),
                         width='100%'
                     ),
-                    rx.spacer(),
-                    rx.box(
-                        rx.button(
-                            rx.icon(tag='close'),
+                    rx.chakra.spacer(),
+                    rx.chakra.box(
+                        rx.chakra.button(
+                            rx.chakra.icon(tag='close'),
                             on_click=PlaylistDialogState.change,
                         ),
                         padding_right=6
                     )
                 ),
-                rx.alert_dialog_body(
+                rx.chakra.alert_dialog_body(
                     rx.debounce_input(
-                        rx.input(
+                        rx.chakra.input(
                             placeholder='name',
                             on_change=PlaylistDialogState.set_pl_name,
                         ),
                         debounce_timeout=100
                     )
                 ),
-                rx.alert_dialog_footer(
-                    rx.button(
+                rx.chakra.alert_dialog_footer(
+                    rx.chakra.button(
                         CREATE_PLAYLIST_BUTTON_TEXT,
                         on_click=PlaylistDialogState.create_and_dismiss(),
                         is_disabled=PlaylistDialogState.name_invalid
@@ -328,11 +328,11 @@ def playlist_create_dialog():
 
 
 def recommendations_view():
-    return rx.box(
-        rx.vstack(
+    return rx.chakra.box(
+        rx.chakra.vstack(
             seeds_view(),
             sub_pane(
-                children=rx.vstack(
+                children=rx.chakra.vstack(
                     switchable_param_slider(
                         TARGET_ACOUSTICNESS_SLIDER_TEXT,
                         value_setter=State.set_recc_target_acousticness_value,
@@ -381,22 +381,22 @@ def recommendations_view():
                         value=State.recc_target_valence_value,
                         hint=VALENCE_DESC_TEXT
                     ),
-                    rx.flex(
-                        rx.hstack(
-                            rx.text(
+                    rx.chakra.flex(
+                        rx.chakra.hstack(
+                            rx.chakra.text(
                                 TARGET_TEMPO_INPUT_TEXT,
                                 as_='b'
                             ),
                             clickable_tooltip(TARGET_TEMPO_DESC_TEXT),
-                            rx.switch(
+                            rx.chakra.switch(
                                 is_checked=State.recc_target_tempo_enabled,
                                 on_change=State.enable_disable_recc_target_tempo,
                                 color_scheme='green'
                             ),
                         ),
-                        rx.spacer(),
+                        rx.chakra.spacer(),
                         rx.debounce_input(
-                            rx.input(
+                            rx.chakra.input(
                                 value=State.recc_target_tempo_value.to_string(),
                                 on_change=State.set_recc_target_tempo_value,
                                 type_='number',
@@ -410,25 +410,25 @@ def recommendations_view():
                         width='100%'
                     ),
 
-                    rx.flex(
-                        rx.hstack(
-                        rx.text(
+                    rx.chakra.flex(
+                        rx.chakra.hstack(
+                        rx.chakra.text(
                                 TEMPO_RANGE_INPUT_NAME,
                                 as_='b'
                             ),
                             clickable_tooltip(
                                 TEMPO_RANGE_DESC_TEXT,
                             ),
-                            rx.switch(
+                            rx.chakra.switch(
                                 is_checked=State.recc_tempo_range_enabled,
                                 on_change=State.enable_disable_recc_tempo_range,
                                 color_scheme='green'
                             ),
                         ),
-                        rx.spacer(),
-                        rx.hstack(
+                        rx.chakra.spacer(),
+                        rx.chakra.hstack(
                             rx.debounce_input(
-                                rx.input(
+                                rx.chakra.input(
                                     value=State.recc_min_tempo_value.to_string(),
                                     on_change=State.set_recc_min_tempo_value,
                                     type_='number',
@@ -437,9 +437,9 @@ def recommendations_view():
                                 ),
                                 debounce_timeout=500
                             ),
-                            rx.text('-'),
+                            rx.chakra.text('-'),
                             rx.debounce_input(
-                                rx.input(
+                                rx.chakra.input(
                                     value=State.recc_max_tempo_value.to_string(),
                                     on_change=State.set_recc_max_tempo_value,
                                     type_='number',
@@ -471,23 +471,23 @@ def recommendations_view():
             rx.cond(
                 State.recommendations_generated,
                 sub_pane(
-                    rx.vstack(
-                        rx.hstack(
+                    rx.chakra.vstack(
+                        rx.chakra.hstack(
                             rx.cond(
                                 State.active_device_exists,
                                 sub_pane_button(
                                     text=PLAY_ALL_TRACKS_BUTTON_TEXT,
                                     on_click=State.play_all_recommended_tracks
                                 ),
-                                rx.popover(
-                                    rx.popover_trigger(
+                                rx.chakra.popover(
+                                    rx.chakra.popover_trigger(
                                         sub_pane_button(
                                             text=PLAY_ALL_TRACKS_BUTTON_TEXT,
                                         )
                                     ),
-                                    rx.popover_content(
-                                        rx.popover_header(ACTIVE_DEVICE_REQUIRED_POPOVER_TEXT),
-                                        rx.popover_close_button(),
+                                    rx.chakra.popover_content(
+                                        rx.chakra.popover_header(ACTIVE_DEVICE_REQUIRED_POPOVER_TEXT),
+                                        rx.chakra.popover_close_button(),
                                     ),
                                 )
                             ),
@@ -519,7 +519,7 @@ def recommendations_view():
                     rx.cond(
                         ~(State.too_few_seeds | State.too_many_seeds),
                         hint_text(GERMINATE_HINT),
-                        rx.text('')
+                        rx.chakra.text('')
                     ),
                     heading=RECC_TRACKS_SUB_PANE_HEADER_TEXT,
                 ),
@@ -531,7 +531,7 @@ def recommendations_view():
 
 def active_device_view() -> rx.Component:
 
-    return rx.text(
+    return rx.chakra.text(
         rx.cond(
             State.active_device_exists,
             ACTIVE_DEVICE_NAME_TEXT + State.active_device_name,
@@ -540,32 +540,32 @@ def active_device_view() -> rx.Component:
     )
 
 def header_bar() -> rx.Component:
-    return rx.center(
-        rx.flex(
-            rx.hstack(
-                rx.heading(
+    return rx.chakra.center(
+        rx.chakra.flex(
+            rx.chakra.hstack(
+                rx.chakra.heading(
                     'fy',
                     size='3xl',
                     color=SPOTIFY_GREEN
                 ),
-                rx.heading(
+                rx.chakra.heading(
                     'nesse',
                     size='3xl'
                 ),
                 spacing='0'
             ),
-            rx.spacer(min_width=10),
+            rx.chakra.spacer(min_width=10),
             active_device_view(),
-            rx.spacer(min_width=10),
-            rx.button(
+            rx.chakra.spacer(min_width=10),
+            rx.chakra.button(
                 rx.color_mode_cond(
-                    light=rx.hstack(
-                        rx.text('dark'),
-                        rx.icon(tag='moon')
+                    light=rx.chakra.hstack(
+                        rx.chakra.text('dark'),
+                        rx.chakra.icon(tag='moon')
                     ),
-                    dark=rx.hstack(
-                        rx.text('light'),
-                        rx.icon(tag='sun')
+                    dark=rx.chakra.hstack(
+                        rx.chakra.text('light'),
+                        rx.chakra.icon(tag='sun')
                     ),
                 ),
                 on_click=rx.toggle_color_mode,
@@ -581,13 +581,13 @@ def header_bar() -> rx.Component:
     )
 
 def authenticate_alert() -> rx.Component:
-    return rx.alert(
-        rx.alert_icon(),
-        rx.alert_title(AUTHENTICATE_DIALOG_HEADER_TEXT, width='100%'),
-        rx.alert_description(
-            rx.hstack(
-                rx.spacer(),
-                rx.button(
+    return rx.chakra.alert(
+        rx.chakra.alert_icon(),
+        rx.chakra.alert_title(AUTHENTICATE_DIALOG_HEADER_TEXT, width='100%'),
+        rx.chakra.alert_description(
+            rx.chakra.hstack(
+                rx.chakra.spacer(),
+                rx.chakra.button(
                     AUTHENTICATE_BUTTON_TEXT,
                     on_click=rx.redirect(
                         State.spotify_auth_url,

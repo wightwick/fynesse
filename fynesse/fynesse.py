@@ -14,12 +14,12 @@ from .constants import *
     description=APP_DESCRIPTION,
 )
 def index() -> rx.Component:
-    return rx.container(
-            rx.vstack(
-                rx.box(
+    return rx.chakra.container(
+            rx.chakra.vstack(
+                rx.chakra.box(
                     rx.cond(
                         State.app_is_authenticated,
-                        rx.box(
+                        rx.chakra.box(
                             on_mount=rx.redirect('/')
                             ), # clear url after auth
                         authenticate_alert(),
@@ -27,19 +27,19 @@ def index() -> rx.Component:
                     width='60vw',
                     height='0vh'
                 ),
-                rx.vstack(
+                rx.chakra.vstack(
                     header_bar(),
-                    rx.flex(
-                        rx.spacer(),
+                    rx.chakra.flex(
+                        rx.chakra.spacer(),
                         pane(library_view(), LIBRARY_PANE_HEADER_TEXT, padding=None),
-                        rx.spacer(),
+                        rx.chakra.spacer(),
                         pane(recommendations_view(), RECOMMENDATIONS_PANE_HEADER_TEXT),
-                        rx.spacer(),
+                        rx.chakra.spacer(),
                         pane(search_view(), SEARCH_PANE_HEADER_TEXT),
-                        rx.spacer(),
+                        rx.chakra.spacer(),
                         width='100vw'
                     ),
-                    rx.spacer(),
+                    rx.chakra.spacer(),
                     footer(),
                     opacity=rx.cond(State.app_is_authenticated, 1, 0.3),
                     height='100%'
