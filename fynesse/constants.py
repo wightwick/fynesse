@@ -61,6 +61,8 @@ GENERATE_RECOMMENDATIONS_BUTTON_TEXT = 'germinate seeds 🪴'
 PLAYLIST_CREATE_DIALOG_HEADER_TEXT = 'new playlist'
 CREATE_PLAYLIST_BUTTON_TEXT = 'create playlist'
 
+LISTEN_ON_SPOTIFY_TEXT = 'listen on Spotify'
+
 AUTHENTICATE_DIALOG_HEADER_TEXT = 'log in with Spotify to use fynesse'
 AUTHENTICATE_BUTTON_TEXT = 'log in'
 
@@ -84,7 +86,6 @@ VALENCE_DESC_TEXT = 'A measure from 0.0 to 1.0 describing the musical positivene
 TARGET_TEMPO_DESC_TEXT = 'Track tempo (BPM) to target in recommendations'
 TEMPO_RANGE_DESC_TEXT = 'Hard limits on the minimum and maximum track tempo (BPM) of recommendations'
 
-
 SEARCH_RESULTS_TYPE_RADIO_TEXT = 'results type:'
 SEARCH_ARTIST_FIELD_TEXT = 'artist'
 SEARCH_TRACK_FIELD_TEXT = 'track'
@@ -93,3 +94,4 @@ SEARCH_YEAR_FIELD_TEXT = 'year'
 NUM_SEARCH_RESULTS_SLIDER_TEXT = 'number of results: '
 
 SPOTIFY_GREEN = '#1DB954'
+
