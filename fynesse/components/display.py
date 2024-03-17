@@ -11,11 +11,11 @@ def genre_card(genre: str) -> rx.Component:
     """Small card showing genre name. Button displayed to right of name
     to bring the genre into the search field
     """
-    return rx.box(
-        rx.hstack(
-            rx.text('#' + genre, as_='small'),
-                rx.button(
-                    rx.icon(tag="search"),
+    return rx.chakra.box(
+        rx.chakra.hstack(
+            rx.chakra.text('#' + genre, as_='small'),
+                rx.chakra.button(
+                    rx.chakra.icon(tag="search"),
                     on_click=SearchState.stage_genre_for_search(genre),
 
                     size='xs',
@@ -35,12 +35,12 @@ def artist_card(
     """Small card showing artist's name. If add_remove_button, add to seeds
     button displayed; otherwise remove from seeds button displayed
     """
-    return rx.box(
-        rx.hstack(
-            rx.text(artist_uri_name.__getitem__(1)),
+    return rx.chakra.box(
+        rx.chakra.hstack(
+            rx.chakra.text(artist_uri_name.__getitem__(1)),
             rx.cond(
                 add_remove_button,
-                rx.button(
+                rx.chakra.button(
                     '🌱',
                     on_click=State.add_artist_to_seeds(artist_uri_name),
                     is_disabled=State.seed_artist_uris.contains(
@@ -49,8 +49,8 @@ def artist_card(
                     size='xs',
                     variant='ghost'
                 ),
-                rx.button(
-                    rx.icon(tag="minus"),
+                rx.chakra.button(
+                    rx.chakra.icon(tag="minus"),
                     on_click=State.remove_artist_from_seeds_by_uri(
                         artist_uri_name.__getitem__(0)
                     ),
@@ -79,25 +79,25 @@ def track_card(
     artists_interactive) otherwise displayed as comma separated text. Buttons
     passed in via buttons are rendered in a vertical stack
     """
-    return rx.box(
-            rx.hstack(
-                rx.image(
+    return rx.chakra.box(
+            rx.chakra.hstack(
+                rx.chakra.image(
                     src_set=track.album_art_srcset,
                     html_width='100',
                     padding=1.5
                 ),
-                rx.vstack(
-                    rx.hstack(
-                        rx.box(
-                            rx.text(
+                rx.chakra.vstack(
+                    rx.chakra.hstack(
+                        rx.chakra.box(
+                            rx.chakra.text(
                                 track.track_name,
                                 as_='strong'
                             ),
                             margin_top=0.5,
                         ),
-                        rx.box(
-                            rx.button(
-                                rx.icon(
+                        rx.chakra.box(
+                            rx.chakra.button(
+                                rx.chakra.icon(
                                     tag='link',
                                     opacity=0.6
                                 ),
@@ -115,16 +115,16 @@ def track_card(
                     ),
                     rx.cond(
                         artists_interactive,
-                        rx.wrap(
+                        rx.chakra.wrap(
                             rx.foreach(
                                 track.artist_uris_names,
-                                lambda x: rx.wrap_item(artist_card(x, True))
+                                lambda x: rx.chakra.wrap_item(artist_card(x, True))
                             ),
                         ),
-                        rx.text(track.artist_names.join(', '))
+                        rx.chakra.text(track.artist_names.join(', '))
                     ),
-                    rx.box(
-                        rx.text(
+                    rx.chakra.box(
+                        rx.chakra.text(
                             track.album_name,
                             as_='small'
                         ),
@@ -134,23 +134,23 @@ def track_card(
                         (track.artist_genres.length() > 0) & show_genres,
                         rx.cond(
                             genres_interactive,
-                            rx.wrap(
+                            rx.chakra.wrap(
                                 rx.foreach(
                                     track.artist_genres,
-                                    #lambda x: rx.box(x, border_radius='xl', border_width='thin')
-                                    lambda x: rx.wrap_item(genre_card(x))
+                                    #lambda x: rx.chakra.box(x, border_radius='xl', border_width='thin')
+                                    lambda x: rx.chakra.wrap_item(genre_card(x))
                                 ),
                                 padding_bottom='1.5'
                             ),
-                            rx.text('#' + track.artist_genres.join(', #'), as_='small')
+                            rx.chakra.text('#' + track.artist_genres.join(', #'), as_='small')
                         ),
-                        rx.text('')
+                        rx.chakra.text('')
                     ),
                     text_align='left',
                     align_items='left',
                 ),
-                rx.spacer(),
-                rx.vstack(*buttons)
+                rx.chakra.spacer(),
+                rx.chakra.vstack(*buttons)
         ),
         border_width=2,
         border_radius='lg',
@@ -167,24 +167,24 @@ def artist_card_lg(
     """Large artist card for display in search results. Shows name,
     artist image, clickable artist genres (if show_genres
     """
-    return rx.box(
-            rx.hstack(
-                rx.image(
+    return rx.chakra.box(
+            rx.chakra.hstack(
+                rx.chakra.image(
                     src_set=artist.images_srcset,
                     html_width='100',
                     border_radius='md'
                 ),
-                rx.vstack(
-                    rx.hstack(
-                        rx.box(
-                            rx.text(
+                rx.chakra.vstack(
+                    rx.chakra.hstack(
+                        rx.chakra.box(
+                            rx.chakra.text(
                                 artist.artist_name,
                             ),
                             margin_top=0.5
                         ),
-                        rx.box(
-                            rx.button(
-                                rx.icon(
+                        rx.chakra.box(
+                            rx.chakra.button(
+                                rx.chakra.icon(
                                     tag='link',
                                     opacity=0.6
                                 ),
@@ -202,20 +202,20 @@ def artist_card_lg(
                     ),
                     rx.cond(
                         (artist.genres.length() > 0) & show_genres,
-                        rx.wrap(
+                        rx.chakra.wrap(
                             rx.foreach(
                                 artist.genres,
-                                #lambda x: rx.box(x, border_radius='xl', border_width='thin')
-                                lambda x: rx.wrap_item(genre_card(x))
+                                #lambda x: rx.chakra.box(x, border_radius='xl', border_width='thin')
+                                lambda x: rx.chakra.wrap_item(genre_card(x))
                             ),
                             padding_bottom='1.5'
                         ),
-                        rx.text('')
+                        rx.chakra.text('')
                     ),
                     align_items='left',
                 ),
-                rx.spacer(),
-                rx.button(
+                rx.chakra.spacer(),
+                rx.chakra.button(
                     '🌱',
                     on_click=State.add_artist_to_seeds([artist.uri, artist.artist_name]),
                     is_disabled=State.seed_artist_uris.contains(artist.uri),
@@ -231,20 +231,20 @@ def artist_card_lg(
 
 
 def pane(
-        children: rx.component,
+        children: rx.Component,
         heading_text: str,
         padding: int = 4
     ) -> rx.Component:
     """Top-level view; displays arbitrary children with a text heading"""
-    return rx.box(
-        rx.vstack(
-            rx.heading(
+    return rx.chakra.box(
+        rx.chakra.vstack(
+            rx.chakra.heading(
                 heading_text,
                 margin_left='19px',
                 margin_bottom=-4,
                 z_index=2,
             ),
-            rx.box(
+            rx.chakra.box(
                 children,
                 border_width='thick',
                 border_radius='3xl',
@@ -267,16 +267,16 @@ def sub_pane(
         **kwargs
     ) -> rx.Component:
     """Second-level view; displays arbitrary children with a text heading"""
-    return rx.box(
-            rx.vstack(
-                rx.heading(
+    return rx.chakra.box(
+            rx.chakra.vstack(
+                rx.chakra.heading(
                     heading,
                     size='md',
                     margin_bottom='-12.5px',
                     margin_left=2,
                     z_index=2
                 ),
-                rx.box(
+                rx.chakra.box(
                     children,
                     border_width='medium',
                     border_radius='xl',
@@ -293,7 +293,7 @@ def sub_pane(
 
 
 def hint_text(text: str) -> rx.Component:
-    return rx.text(
+    return rx.chakra.text(
         text,
         opacity=0.3,
         text_align='center',
@@ -302,15 +302,15 @@ def hint_text(text: str) -> rx.Component:
 def spotify_image_link(dark_mode: bool) -> rx.Component:
     img_src = 'Spotify_Logo_RGB_White.png' if dark_mode\
         else 'Spotify_Logo_RGB_Black.png'
-    return rx.link(
-        rx.image(src=img_src, height='21px'),
+    return rx.chakra.link(
+        rx.chakra.image(src=img_src, height='21px'),
         href='https://open.spotify.com'
     )
 
 def footer() -> rx.Component:
-    return rx.center(
-        rx.hstack(
-            rx.text('all track, artist and genre information from'),
+    return rx.chakra.center(
+        rx.chakra.hstack(
+            rx.chakra.text('all track, artist and genre information from'),
             rx.color_mode_cond(
                 light=spotify_image_link(dark_mode=False),
                 dark=spotify_image_link(dark_mode=True)
