@@ -217,8 +217,8 @@ def spotify_link_card_bottom_bar(link_url: str) -> rx.Component:
                             weight='regular'
                         ),
                         rx.color_mode_cond(
-                            light=rx.chakra.image(src='Spotify_Icon_RGB_Black.png', height='10px'),
-                            dark=rx.chakra.image(src='Spotify_Icon_RGB_White.png', height='10px'),
+                            light=rx.chakra.image(src='Spotify_Icon_RGB_Black.png', height='12px'),
+                            dark=rx.chakra.image(src='Spotify_Icon_RGB_White.png', height='12px'),
                         ),
                         align='center',
                         width='100%',
