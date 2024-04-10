@@ -1,6 +1,10 @@
 """
-Constants used throughout UI; in once place for easier modification
+Constants:
+    Global logic constants
+    Strings used throughout UI; in once place for easier modification
 """
+LOGGING_ENABLED = False
+
 NUM_RECCOMENDATIONS_DEFAULT = 10
 NUM_SEARCH_RESULTS_DEFAULT = 10
 

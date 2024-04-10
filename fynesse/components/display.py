@@ -136,7 +136,7 @@ def track_card(
                     rx.chakra.vstack(*buttons),
                     margin_right=3
             ),
-            spotify_link_card_bottom_bar(link_url=track.album_url),
+            spotify_link_card_bottom_bar(link_url=track.track_url),
             spacing='0'
         ),
         border_width=2,

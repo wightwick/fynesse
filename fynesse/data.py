@@ -34,7 +34,7 @@ class Track(rx.Base):
     artist_uris_names: list[tuple[str, str]]
     artist_names: list[str]
     album_name: str
-    album_url: str
+    track_url: str
     album_art: list[str]
     spotify_url: str
     artist_genres: list[str] = []
@@ -92,7 +92,7 @@ class Track(rx.Base):
 
         album_art_srcset = src_set_from_images_list(raw_album_art)
 
-        album_url = track_dict['album']['external_urls']['spotify']
+        track_url = track_dict['external_urls']['spotify']
         
         super().__init__(
             uri=uri,
@@ -101,7 +101,7 @@ class Track(rx.Base):
             artist_names=artist_names,
             album_name=album_name,
             album_art=album_art,
-            album_url=album_url,
+            track_url=track_url,
             album_art_srcset=album_art_srcset,
             spotify_url=spotify_url,
             added_at=added_at

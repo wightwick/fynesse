@@ -14,6 +14,7 @@ import string
 import urllib
 import base64
 import requests
+import logging
 
 class State(rx.State):
     """The app's base state;
@@ -58,7 +59,7 @@ class State(rx.State):
         does not match that provided for the authentication url, do not accept
         it. Update state var with provided auth token
         """
-        print('Getting spotify authentication token')
+        log_message('Getting spotify authentication token')
         code, state = self.callback_code_and_state
         if state == self.code_req_state:
             auth_options = {
@@ -90,7 +91,7 @@ class State(rx.State):
         """Use authentication token's 'refresh_token' property to request a new
         spotify authenticatioun token; update the state var accordingly
         """
-        print('Refreshing Spotify authentication token')
+        log_message('Refreshing Spotify authentication token')
         refresh_token = json.loads(self.auth_token_json)['refresh_token']
         auth_options = {
                 'url': 'https://accounts.spotify.com/api/token',
@@ -225,7 +226,7 @@ class State(rx.State):
     
     #### LIBRARY FROM API
     def fetch_playlists(self):
-        print("Fetching playlist info")
+        log_message('Fetching playlist info')
 
         pl_results = self.get_sp().current_user_playlists()
         pl_items = pl_results['items']
@@ -246,7 +247,7 @@ class State(rx.State):
                 playlist_counts[name] = 1        
 
     def fetch_tracks_for_playlist(self, playlist: Playlist):
-        print("Fetching playlist tracks for PL", playlist.playlist_name)
+        log_message('Fetching playlist tracks for PL ' + playlist.playlist_name)
 
         pl_results = self.get_sp().playlist_items(playlist.uri)
         playlist_tracks = pl_results['items']
@@ -262,7 +263,7 @@ class State(rx.State):
         ]
 
     def fetch_recent_tracks(self):
-        print('Fetching recent tracks')
+        log_message('Fetching recent tracks')
         raw_rp_tracks = self.get_sp().current_user_recently_played(
             limit=50
         )['items']
@@ -274,7 +275,7 @@ class State(rx.State):
         self.top_tracks_have_genre = False
     
     def fetch_liked_tracks_batch(self):
-        print('Fetching a batch of liked tracks')
+        log_message('Fetching a batch of liked tracks')
         raw_liked_tracks = self.get_sp().current_user_saved_tracks(
             limit=50,
             offset=len(self.liked_tracks)
@@ -284,7 +285,7 @@ class State(rx.State):
         self.liked_tracks_have_genre = False
 
     def fetch_top_tracks(self):
-        print('Fetching top tracks')
+        log_message('Fetching top tracks')
         raw_top_tracks = self.get_sp().current_user_top_tracks(limit=50)['items']
 
         self.top_tracks = [
@@ -313,7 +314,7 @@ class State(rx.State):
         )
 
         for i in range(0, len(a_uris_subset), chunk_size):
-            print('Fetching batch of artist genres')
+            log_message('Fetching batch of artist genres')
             chunk = a_uris_subset[i:i + chunk_size] 
             output_chunk = self.get_sp().artists(chunk)
             artists.extend(output_chunk['artists'])
@@ -418,7 +419,7 @@ class State(rx.State):
     def fetch_recommendations(
             self,
         ):
-        print(f'Fetching recommended tracks')
+        log_message('Fetching recommended tracks')
         
         generation_params_dict = {
             'seed_artists': self.seed_artist_uris,
@@ -460,28 +461,21 @@ class State(rx.State):
             recc_tracks_without_genre
         )
 
-    ### PLAYBACK STATE
     def play_track_uris(
             self, 
             track_uris: list[str],
         ):
-        print('Playing')
+        log_message('Playing')
         if len(self.active_devices) > 0:
             self.get_sp().start_playback(
                 uris=track_uris,
             )
-        # elif len(track_uris) == 1:
-        #     track_link = self.get_sp().track(
-        #         track_id=track_uris[0].split(':')[-1]
-        #     )['external_urls']['spotify']
-        #     print(track_link)
-        #     rx.redirect(track_link, external=True)
     
     def play_all_recommended_tracks(self):
         self.play_track_uris(self.recc_track_uris)
 
     def queue_track_uri(self, track_uri: Track):
-        print('Queueing')
+        log_message('Queueing')
         # ic(track_uri, self.active_devices())
         if len(self.active_devices) > 0:
             self.get_sp().add_to_queue(track_uri)
@@ -734,7 +728,7 @@ class SearchState(State):
         Either tracks or artists are searched for based on 
         self.search_results_type
         """
-        print('Fetching search results')
+        log_message('Fetching search results')
         query_text = self.combined_search_query
         ic(query_text)
         query_is_valid = len(query_text) > 0

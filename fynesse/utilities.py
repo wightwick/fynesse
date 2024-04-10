@@ -1,4 +1,8 @@
 import time
+import logging
+from .constants import LOGGING_ENABLED
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 def flatten_list_of_lists(list_of_lists: list[list]) -> list:
     return [
@@ -23,6 +27,9 @@ def token_expired(token_dict: dict) -> bool:
     return token_dict['expires_at'] <= time.time()
 
 def add_token_expiry_time(token_dict: dict) -> dict:
-    print(token_dict)
     token_dict['expires_at'] = token_dict['expires_in'] + int(time.time())
     return token_dict 
+
+def log_message(message: str):
+    if LOGGING_ENABLED:
+        logging.info(message)
