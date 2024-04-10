@@ -7,14 +7,12 @@ from sp_secrets import *
 from .data import *
 from .utilities import *
 from .constants import *
-from icecream import ic
 import json
 import random
 import string
 import urllib
 import base64
 import requests
-import logging
 
 class State(rx.State):
     """The app's base state;
@@ -445,7 +443,7 @@ class State(rx.State):
                 if self.recc_tempo_range_enabled else None,
         }
         
-        ic(
+        log_message(
             generation_params_dict
         )
         raw_recc_tracks = self.get_sp().recommendations(
@@ -476,7 +474,6 @@ class State(rx.State):
 
     def queue_track_uri(self, track_uri: Track):
         log_message('Queueing')
-        # ic(track_uri, self.active_devices())
         if len(self.active_devices) > 0:
             self.get_sp().add_to_queue(track_uri)
 
@@ -730,7 +727,7 @@ class SearchState(State):
         """
         log_message('Fetching search results')
         query_text = self.combined_search_query
-        ic(query_text)
+        log_message(query_text)
         query_is_valid = len(query_text) > 0
         
         if query_is_valid:
